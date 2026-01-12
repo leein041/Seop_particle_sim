@@ -1,0 +1,9 @@
+{
+  "name": "seop-project",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "glew",
+    "glfw3",
+    "opengl"
+  ]
+}

@@ -1,0 +1,12 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+
+IndentWidth: 4
+UseTab: Never
+SeparateDefinitionBlocks: Always
+
+BraceWrapping:
+  AfterControlStatement: false
+  BeforeElse: false
+---

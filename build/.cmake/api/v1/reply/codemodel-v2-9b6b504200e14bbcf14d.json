@@ -1,0 +1,321 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-236c98780a41b1728983.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "src",
+					"childIndexes" : 
+					[
+						2,
+						3
+					],
+					"jsonFile" : "directory-src-Release-c94b7c2814d5a21df52c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src"
+				},
+				{
+					"build" : "src/imgui",
+					"jsonFile" : "directory-src.imgui-Release-fdb655b3fa73bf1e0f65.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "src/imgui",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "src/seop",
+					"childIndexes" : 
+					[
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11
+					],
+					"jsonFile" : "directory-src.seop-Release-b40005c6513634e7cbb9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "src/seop",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "src/seop/math",
+					"jsonFile" : "directory-src.seop.math-Release-5fac559a8402618676dc.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/math",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "src/seop/window",
+					"jsonFile" : "directory-src.seop.window-Release-f47ac793ea5e8b8064a3.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/window",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "src/seop/Input",
+					"jsonFile" : "directory-src.seop.Input-Release-118568b097595e3b12ba.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/Input",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "src/seop/entity",
+					"jsonFile" : "directory-src.seop.entity-Release-91ca0526cb967a47a60b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/entity",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "src/seop/graphic",
+					"jsonFile" : "directory-src.seop.graphic-Release-06de37f53a36b9ae88fb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/graphic",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"build" : "src/seop/Imgui",
+					"jsonFile" : "directory-src.seop.Imgui-Release-04d93f06f94ae6afe2f4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/imgui",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "src/seop/scene",
+					"jsonFile" : "directory-src.seop.scene-Release-e50f9fc32184ed11e7bb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/scene",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "src/seop/example",
+					"jsonFile" : "directory-src.seop.example-Release-428252b75e869453a34a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 0,
+					"source" : "src/seop/example",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11
+					],
+					"name" : "ParticleSim",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 2,
+					"id" : "imgui::@f0bb1e571c12c8d458e0",
+					"jsonFile" : "target-imgui-Release-c50d11bbbe39f897f543.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "seop_entity::@dbe1cc89179aaf75e888",
+					"jsonFile" : "target-seop_entity-Release-71888cdcc1416b1eb660.json",
+					"name" : "seop_entity",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 11,
+					"id" : "seop_example::@418499cd3ad107ff624c",
+					"jsonFile" : "target-seop_example-Release-1eee1bf355090c400f57.json",
+					"name" : "seop_example",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "seop_graphic::@69e6cbcd07cb8f8223c7",
+					"jsonFile" : "target-seop_graphic-Release-4bca32aeeb5066059651.json",
+					"name" : "seop_graphic",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "seop_imgui::@9a33b6e0923625753a0e",
+					"jsonFile" : "target-seop_imgui-Release-5ec07541ea5df7f6db8d.json",
+					"name" : "seop_imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "seop_input::@40161e986d3d2e59e8d6",
+					"jsonFile" : "target-seop_input-Release-430ca175bae0ea37f00e.json",
+					"name" : "seop_input",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "seop_math::@31945de3559ef295257c",
+					"jsonFile" : "target-seop_math-Release-c350f0e9afdaac81e57a.json",
+					"name" : "seop_math",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 10,
+					"id" : "seop_scene::@f8abe9a944f8800d6b04",
+					"jsonFile" : "target-seop_scene-Release-39747940c13fdd02ef82.json",
+					"name" : "seop_scene",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "seop_window::@9f5898a88badf09e54e9",
+					"jsonFile" : "target-seop_window-Release-7997675c4dff28fc25f7.json",
+					"name" : "seop_window",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "sim::@24254579be36230d7460",
+					"jsonFile" : "target-sim-Release-ee3ee308b22f80126dd5.json",
+					"name" : "sim",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/seop_vscode/build",
+		"source" : "C:/seop_vscode"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

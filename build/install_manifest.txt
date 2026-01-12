@@ -1,0 +1,3 @@
+C:/seop_vscode/dist/bin/sim.exe
+C:/seop_vscode/dist/bin/glew32.dll
+C:/seop_vscode/dist/bin/glfw3.dll
