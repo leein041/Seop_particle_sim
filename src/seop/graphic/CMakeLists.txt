@@ -14,6 +14,9 @@ target_link_libraries(${_target}
     seop::entity
     seop::scene
     seop::input
+    seop::imgui
+    seop::context
+    seop::msg
 )
 
 target_include_directories(${_target} PUBLIC

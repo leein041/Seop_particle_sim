@@ -13,6 +13,7 @@ target_link_libraries(${_target} PUBLIC
     glfw
 
     seop::window
+    seop::context
 )
 
 # 사용 경로 설정

@@ -8,10 +8,11 @@ void example_run();
 }
 
 // configs 구성 설정
-// context 상호 작용 정보 (is, do 등)
+// state 상호 작용 정보 (is, do 등)
 // settings 옵션
 //  desc 기술서
 // data 정보 
+// context 시스템 포인터 바구니
 
 // TODO : 나중에 해야 할 일(미구현 기능, 추가 예정 로직)
 // TODO: 현재는 정적 메쉬만 생성하지만, 나중에 스킨드 메쉬도 지원해야 함.

@@ -1,23 +1,13 @@
-set(_target "seop_imgui")
+set(_target "seop_message")
 add_library(${_target})
-add_library(seop::imgui ALIAS ${_target})
+add_library(seop::msg ALIAS ${_target})
 
 target_sources(${_target} PRIVATE
-    seop_imgui/imgui_renderer.cpp 
-    seop_imgui/imgui_renderer.hpp
+    seop_message/message.hpp
+    seop_message/message.cpp
 )
 
 target_link_libraries(${_target}
-    PUBLIC
-    imgui
-    GLEW::GLEW
-    glfw
-    OpenGL::GL
-
-    seop::window
-    seop::command
-    seop::math
-    seop::scene
 )
 
 target_include_directories(${_target} PUBLIC

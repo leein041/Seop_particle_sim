@@ -1,8 +1,12 @@
 #include "device.hpp"
 #include "seop_entity/particle.hpp"
 #include "seop_math/math.hpp"
+#include "seop_message/message.hpp"
 #include "seop_scene/camera.hpp"
+#include "seop_scene/scene.hpp"
+#include "seop_scene/scene_message.hpp"
 #include "seop_window/glf_window.hpp"
+#include "seop_entity/particle.hpp"
 
 #include <iostream>
 #include <memory>
@@ -16,8 +20,11 @@ Device::Device()
 {
 }
 
-void Device::init()
+void Device::init(Context& ctx)
 {
+    ctx.msg_queue->Register_handler<scene::Particle_change_message>(
+        [this](scene::Particle_change_message& msg) -> bool { return on_message(msg); });
+
     glewInit();
 
     gravity_cs = make_cs(gravity_cs_source);
@@ -27,72 +34,84 @@ void Device::init()
     grid_vs = make_vs(grid_vs_source);
     grid_fs = make_fs(grid_fs_source);
 
-	// test
-	glEnable(GL_PROGRAM_POINT_SIZE);
-	glEnable(GL_POINT_SPRITE);
-	
+    // test
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_POINT_SPRITE);
+
     math::Vec4 _0{-1.0f, 0.0f, -1.0f, 0.0f};
     math::Vec4 _1{1.0f, 0.0f, -1.0f, 0.0f};
     math::Vec4 _2{1.0f, 0.0f, 1.0f, 0.0f};
     math::Vec4 _3{-1.0f, 0.0f, 1.0f, 0.0f};
-	grid_.push_back(_0);
-	grid_.push_back(_1);
-	grid_.push_back(_2);
-	grid_.push_back(_3);
+    grid_.push_back(_0);
+    grid_.push_back(_1);
+    grid_.push_back(_2);
+    grid_.push_back(_3);
 
     gen_buffer();
     gen_shader_program();
 }
 
-void Device::compute(bool is_ui_hovered, float dt_f, scene::Scene_data &scene_data, input::Input_data &input_data)
+auto Device::on_message(msg::Message& msg) -> bool
+{
+    msg::Message_dispatcher dispatcher(msg);
+    dispatcher.Dispatch<scene::Particle_change_message>([this](scene::Particle_change_message& msg) -> bool {
+        update_shader_buffer(particle_sb, 0, sizeof(entity::Particle) * msg.particle_count(), msg.particle_data());
+        return true;
+    });
+
+    return true;
+}
+
+void Device::compute(float dt_f, Context& ctx)
 {
     if (compute_type_ & Compute_type::Gravity) {
         // SSBO 생성 및 데이터 전송
         glUseProgram(gravity_cs_program);
         // Uniform 설정
-        glUniform3fv(glGetUniformLocation(gravity_cs_program, "u_ray_point"), 1,
-                     (is_ui_hovered) ? &Vec3::Zero.x_ : &input_data.ray_point.x_);
-        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_gravity"), scene_data.forces.gravity);
+        glUniform3fv(glGetUniformLocation(gravity_cs_program, "u_ray_point"), 1, &ctx.input->data().ray_point.x_);
+        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_gravity"), ctx.scene->data().forces.gravity);
         glUniform1f(glGetUniformLocation(gravity_cs_program, "u_orbit_force"),
-                    scene_data.forces.gravity * scene_data.forces.vortex);
-        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_damping"), scene_data.forces.damping);
-        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_magentic_str"), scene_data.forces.magentic_str);
+                    ctx.scene->data().forces.gravity * ctx.scene->data().forces.vortex);
+        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_damping"), ctx.scene->data().forces.damping);
+        glUniform1f(glGetUniformLocation(gravity_cs_program, "u_magentic_str"), ctx.scene->data().forces.magentic_str);
         glUniform1f(glGetUniformLocation(gravity_cs_program, "u_dt"), dt_f);
         glUniform1ui(glGetUniformLocation(gravity_cs_program, "u_particle_count"),
-                     (GLuint)scene_data.particle_properties.particle_count);
+                     (GLuint)ctx.scene->data().particle_properties.count);
         glUniform1f(glGetUniformLocation(gravity_cs_program, "u_particle_col"),
-                    scene_data.particle_properties.particle_col);
+                    ctx.scene->data().particle_properties.col);
         glUniform1ui(glGetUniformLocation(gravity_cs_program, "u_attractor_count"),
-                     (GLuint)scene_data.attractor_properties.attractor_count);
+                     (GLuint)ctx.scene->data().attractor_properties.attractor_count);
     }
     if (compute_type_ & Compute_type::Ampere) {
         // SSBO 생성 및 데이터 전송
         glUseProgram(ampere_cs_program);
         // Uniform 설정
         glUniform2f(glGetUniformLocation(ampere_cs_program, "u_cursor_pos"), 0.0f, 0.0f);
-        glUniform1f(glGetUniformLocation(ampere_cs_program, "u_damping"), scene_data.forces.damping);
-        glUniform1f(glGetUniformLocation(ampere_cs_program, "u_current"), scene_data.electronical_properites.I);
+        glUniform1f(glGetUniformLocation(ampere_cs_program, "u_damping"), ctx.scene->data().forces.damping);
+        glUniform1f(glGetUniformLocation(ampere_cs_program, "u_current"), ctx.scene->data().electronical_properites.I);
         glUniform1f(glGetUniformLocation(ampere_cs_program, "u_dt"), dt_f);
         glUniform1ui(glGetUniformLocation(ampere_cs_program, "u_particle_count"),
-                     (GLuint)scene_data.particle_properties.particle_count);
+                     (GLuint)ctx.scene->data().particle_properties.count);
         glUniform1f(glGetUniformLocation(ampere_cs_program, "u_particle_col"),
-                    scene_data.particle_properties.particle_col);
+                    ctx.scene->data().particle_properties.col);
     }
 
     // 실행
-    GLuint num_groups = static_cast<GLuint>((scene_data.particle_properties.particle_count + 255) / 256);
+    GLuint num_groups = static_cast<GLuint>((ctx.scene->data().particle_properties.count + 255) / 256);
     glDispatchCompute(num_groups, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 }
 
-void Device::prepare_grid(const Matrix &view, const Matrix &projection)
+void Device::prepare_grid(Context& ctx)
 {
-    glEnable(GL_BLEND);                                // 블렌딩 활성화
+    glEnable(GL_BLEND);                // 블렌딩 활성화
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // 입자들이 겹치면 더 밝아짐 (불꽃, 네온 효과)
 
     glUseProgram(grid_shader_program);
-    glUniformMatrix4fv(glGetUniformLocation(grid_shader_program, "view"), 1, GL_FALSE, (float *)&view);
-    glUniformMatrix4fv(glGetUniformLocation(grid_shader_program, "projection"), 1, GL_FALSE, (float *)&projection);
+    glUniformMatrix4fv(glGetUniformLocation(grid_shader_program, "view"), 1, GL_FALSE,
+                       (float*)&ctx.scene->camera().data().view);
+    glUniformMatrix4fv(glGetUniformLocation(grid_shader_program, "projection"), 1, GL_FALSE,
+                       (float*)&ctx.scene->camera().data().projection);
 
     glBindBuffer(GL_ARRAY_BUFFER, grid_sb);
     glEnableVertexAttribArray(2);
@@ -105,20 +124,22 @@ void Device::draw_grid()
     glDisableVertexAttribArray(2);
 }
 
-void Device::prepare_draw(const Matrix &view, const Matrix &projection, float particle_size)
+void Device::prepare_draw(Context& ctx)
 {
 
-    glPointSize(particle_size);
+    glPointSize(ctx.scene->data().particle_properties.size);
 
     glUseProgram(render_shader_program);
-    glUniformMatrix4fv(glGetUniformLocation(render_shader_program, "view"), 1, GL_FALSE, (float *)&view);
-    glUniformMatrix4fv(glGetUniformLocation(render_shader_program, "projection"), 1, GL_FALSE, (float *)&projection);
+    glUniformMatrix4fv(glGetUniformLocation(render_shader_program, "view"), 1, GL_FALSE,
+                       (float*)&ctx.scene->camera().data().view);
+    glUniformMatrix4fv(glGetUniformLocation(render_shader_program, "projection"), 1, GL_FALSE,
+                       (float*)&ctx.scene->camera().data().projection);
 
     glBindBuffer(GL_ARRAY_BUFFER, particle_sb);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(entity::Particle), 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(entity::Particle), (void *)(16));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(entity::Particle), (void*)(16));
 }
 
 void Device::draw(size_t cnt)
@@ -169,7 +190,7 @@ void Device::gen_shader_program()
     glLinkProgram(grid_shader_program);
 }
 
-GLuint Device::make_cs(const char *src)
+GLuint Device::make_cs(const char* src)
 {
     GLuint cs_shader = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(cs_shader, 1, &src, NULL);
@@ -177,7 +198,7 @@ GLuint Device::make_cs(const char *src)
     return cs_shader;
 }
 
-GLuint Device::make_vs(const char *src)
+GLuint Device::make_vs(const char* src)
 {
     GLuint vs_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs_shader, 1, &src, NULL);
@@ -185,7 +206,7 @@ GLuint Device::make_vs(const char *src)
     return vs_shader;
 }
 
-GLuint Device::make_fs(const char *src)
+GLuint Device::make_fs(const char* src)
 {
     GLuint fs_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs_shader, 1, &src, NULL);
@@ -193,7 +214,7 @@ GLuint Device::make_fs(const char *src)
     return fs_shader;
 }
 
-void Device::update_shader_buffer(GLuint buffer_id, GLuint binding_point, GLsizeiptr buffer_size, const void *data)
+void Device::update_shader_buffer(GLuint buffer_id, GLuint binding_point, GLsizeiptr buffer_size, const void* data)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer_id);
 
@@ -202,15 +223,6 @@ void Device::update_shader_buffer(GLuint buffer_id, GLuint binding_point, GLsize
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_point, buffer_id);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void Device::update_vertex_buffer(GLuint buffer_id, GLsizeiptr buffer_size, const void *data)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
-
-    glBufferData(GL_ARRAY_BUFFER, buffer_size, data, GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 auto Device::compute_type() const -> uint32_t

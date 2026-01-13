@@ -1,12 +1,17 @@
 #include "example.hpp"
 
+#include "seop_command/command.hpp"
+#include "seop_context/context.hpp"
+#include "seop_entity/attractor.hpp"
 #include "seop_entity/particle.hpp"
 #include "seop_graphic/device.hpp"
 #include "seop_imgui/imgui_renderer.hpp"
 #include "seop_input/input.hpp"
 #include "seop_math/math.hpp"
+#include "seop_message/message.hpp"
 #include "seop_scene/camera.hpp"
 #include "seop_scene/scene.hpp"
+#include "seop_window/glf_window.hpp"
 
 #include <algorithm>
 #include <array>
@@ -39,7 +44,7 @@ class Example
             end_frame();
         }
         device_.shut_down();
-        imgui_renderer_.shut_down();
+        imgui_.shut_down();
     }
 
     void tick()
@@ -49,7 +54,7 @@ class Example
         // Update fixed steps
         const auto new_time = std::chrono::steady_clock::now();
         const auto duration = new_time - m_current_time;
-        double frame_time = std::chrono::duration<double, std::ratio<1>>(duration).count();
+        double     frame_time = std::chrono::duration<double, std::ratio<1>>(duration).count();
 
         if (frame_time > 0.25) {
             frame_time = 0.25;
@@ -58,42 +63,68 @@ class Example
         m_current_time = new_time;
         m_time_accumulator += frame_time;
 
-        float inv_frame_rate = imgui_renderer_.inv_frame_rate();
+        float        inv_frame_rate = imgui_.inv_frame_rate();
         const double dt = 1.0 * inv_frame_rate;
-        float dt_f = static_cast<float>(dt);
+        float        dt_f = static_cast<float>(dt);
 
         // update
-        input_.update(window_);
-        scene_.update_camera(imgui_renderer_.is_hovered(), dt_f, input_, window_);
+        update(dt_f);
 
         // compute
         while (m_time_accumulator >= dt) {
-            device_.compute(imgui_renderer_.is_hovered(), dt_f, scene_.data(), input_.data());
+            device_.compute(dt_f, context_);
             m_time_accumulator -= dt;
             m_time += dt;
         }
         // render
-        device_.prepare_grid(scene_.camera().data().view, scene_.camera().data().projection);
-        device_.draw_grid();
-        device_.prepare_draw(scene_.camera().data().view, scene_.camera().data().projection,
-                             scene_.data().particle_properties.particle_size);
-        device_.draw(scene_.data().particle_properties.particle_count);
+        render();
 
-        imgui_renderer_.render(scene_.data(), scene_.camera());
+        // reset
+        if (imgui_.state().is_reset) {
+            reset();
+        }
+    }
+
+    void register_command()
+    {
+        scene_.register_commnad(context_);
     }
 
     void init()
     {
+        context_.command_list = &command_list_;
+        context_.msg_queue = &msg_queue_;
+        context_.window = &window_;
+        context_.scene = &scene_;
+        context_.device = &device_;
+        context_.imgui = &imgui_;
+        context_.input = &input_;
+
         window_.init();
         scene_.init();
-        device_.init();
-        imgui_renderer_.init(window_);
+        device_.init(context_);
+        imgui_.init(context_);
         input_.init();
+
         reset();
+
+        register_command();
     }
 
-    void update()
+    void update(float dt_f)
     {
+        imgui_.update(context_);
+        input_.update(context_);
+        if (!imgui_.state().is_ui_hovered)
+            scene_.update_camera(dt_f, context_);
+    }
+
+    void render()
+    {
+        device_.prepare_grid(context_);
+        device_.draw_grid();
+        device_.prepare_draw(context_);
+        device_.draw(scene_.data().particle_properties.count);
     }
 
     void begin_frame()
@@ -103,20 +134,18 @@ class Example
 
     void end_frame()
     {
-        if (scene_.data().particle_properties.particle_reset) {
-            reset();
-        }
+        msg_queue_.Process();
+        imgui_.end_frame();
         window_.buffer_swap();
     }
 
     void reset()
     {
-        device_.clear_frame();
-        scene_.create_particles(scene_.data().particle_properties.particle_count);
-        scene_.create_attractors(scene_.data().attractor_properties.attractor_count);
+        input_.reset();
+        scene_.reset();
 
         device_.update_shader_buffer(device_.particle_sb, 0,
-                                     sizeof(entity::Particle) * scene_.data().particle_properties.particle_count,
+                                     sizeof(entity::Particle) * scene_.data().particle_properties.count,
                                      scene_.data().entities.particles.data());
         device_.update_shader_buffer(device_.ssbo_attractor, 1,
                                      sizeof(entity::Attractor) * scene_.data().attractor_properties.attractor_count,
@@ -127,20 +156,24 @@ class Example
     }
 
   private:
-    window::Glf_window window_;
-    graphic::Device device_;
-    imgui::Imgui_renderer imgui_renderer_;
-    scene::Scene scene_;
-    input::Input input_;
+    Context                               context_;
+    msg::Message_queue                    msg_queue_;
+    command::Command_list                 command_list_;
+    window::Glf_window                    window_;
+    graphic::Device                       device_;
+    imgui::Imgui_renderer                 imgui_;
+    scene::Scene                          scene_;
+    input::Input                          input_;
 
     std::chrono::steady_clock::time_point m_current_time;
-    double m_time_accumulator{0.0};
-    double m_time{0.0};
+    double                                m_time_accumulator{0.0};
+    double                                m_time{0.0};
 };
 
 void example_run()
 {
     Example example{};
+
     example.run();
 }
 } // namespace example

@@ -18,10 +18,10 @@ class Camera_trasform
     math::Vec3 forward{0.0f, 0.0f, -1.0f};
     math::Vec3 up{0.0f, 1.0f, 0.0f};
     math::Vec3 right{1.0f, 0.0f, 0.0f};
-    
-    float speed_scale{500.0f};
-    float yaw{0.0f};
-    float pitch{0.0f};
+
+    float      speed_scale{500.0f};
+    float      yaw{0.0f};
+    float      pitch{0.0f};
 };
 
 class Camera_frustum
@@ -37,10 +37,10 @@ class Camera_frustum
 class Camera_data
 {
   public:
-    Camera_frustum frustum;
+    Camera_frustum  frustum;
     Camera_trasform transform;
-    math::Matrix view;
-    math::Matrix projection;
+    math::Matrix    view;
+    math::Matrix    projection;
     Projection_type projection_type{Projection_type::Perspective};
 };
 
@@ -50,19 +50,17 @@ class Camera
   public:
     Camera();
     ~Camera() = default;
-    void init();
-    void update();
-    void make_view();
-    void make_projection();
+    void               init();
+    void               update();
+    void               make_view();
+    void               make_projection();
 
-    [[nodiscard]] auto data() const -> const Camera_data &;
-    [[nodiscard]] auto data() -> Camera_data &;
-    void set_transform(const Camera_trasform& tr);
+    [[nodiscard]] auto data() const -> const Camera_data&;
+    [[nodiscard]] auto data() -> Camera_data&;
+    void               set_transform(const Camera_trasform& tr);
 
     // temp
-    void update_transform();
-
-
+    void               update_transform();
 
   private:
     Camera_data data_;

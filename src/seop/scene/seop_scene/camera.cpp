@@ -30,21 +30,21 @@ void Camera::make_view()
 
 void Camera::make_projection()
 {
-    data_.projection =
-        math::Matrix::CreatePerspective(2 * math::PI / 6.0f, data_.frustum.aspect, data_.frustum.near, data_.frustum.far);
+    data_.projection = math::Matrix::CreatePerspective(2 * math::PI / 6.0f, data_.frustum.aspect, data_.frustum.near,
+                                                       data_.frustum.far);
 }
 
-auto Camera::data() const -> const Camera_data &
+auto Camera::data() const -> const Camera_data&
 {
     return data_;
 }
 
-auto Camera::data() -> Camera_data &
+auto Camera::data() -> Camera_data&
 {
     return data_;
 }
 
-void Camera::set_transform(const Camera_trasform &tr)
+void Camera::set_transform(const Camera_trasform& tr)
 {
     data_.transform = tr;
 }
@@ -53,9 +53,9 @@ void Camera::update_transform()
 {
     Camera_trasform& tr = data_.transform;
 
-    math::Vec3 front;
-    float r_yaw = math::ToRadian(tr.yaw);
-    float r_pitch = math::ToRadian(tr.pitch);
+    math::Vec3       front;
+    float            r_yaw = math::ToRadian(tr.yaw);
+    float            r_pitch = math::ToRadian(tr.pitch);
 
     front.x_ = -cos(r_pitch) * sin(r_yaw); // NOTE : it's look -z dir
     front.y_ = sin(r_pitch);
@@ -66,7 +66,6 @@ void Camera::update_transform()
     math::Vec3 worldUp{0.0f, 1.0f, 0.0f};
     tr.right = tr.forward.Cross(worldUp).Normalized();
     tr.up = tr.right.Cross(tr.forward).Normalized();
-
 }
 
 } // namespace seop::scene

@@ -1,12 +1,43 @@
 ---
 Language: Cpp
-BasedOnStyle: Microsoft
-
+BasedOnStyle: LLVM
 IndentWidth: 4
-UseTab: Never
-SeparateDefinitionBlocks: Always
+ColumnLimit: 120
 
+# 포인터 위치
+PointerAlignment: Left
+
+# 인자 정렬
+AlignAfterOpenBracket: Align
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCompound: true
+  PadOperators: true
+  
+
+# never change ------
+
+SeparateDefinitionBlocks: Always
+# 템플릿 선언 뒤에 무조건 줄바꿈
+AlwaysBreakTemplateDeclarations: Yes
+
+# 중괄호 반드시 내림
+# 짧은 함수도 한 줄로 만들지 않고 무조건 줄바꿈
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+
+# [수정] 중괄호 스타일을 세부 설정(Custom)으로 변경
+BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterControlStatement: false
-  BeforeElse: false
+  AfterFunction: true       # 함수 중괄호 내림
+  AfterControlStatement: false # if, for, while 중괄호 내림
+  BeforeElse: false         # } else 를 같은 줄에 붙임 (핵심!)
+  AfterClass: true          # 클래스 중괄호 내림
+  AfterNamespace: true      # 네임스페이스 중괄호 내림
+  AfterStruct: true         # 구조체 중괄호 내림
+  BeforeCatch: false        # } catch 를 같은 줄에 붙임
 ---
