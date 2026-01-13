@@ -10,7 +10,7 @@ void example_run();
 // configs 구성 설정
 // state 상호 작용 정보 (is, do 등)
 // settings 옵션
-//  desc 기술서
+// desc 기술서
 // data 정보 
 // context 시스템 포인터 바구니
 

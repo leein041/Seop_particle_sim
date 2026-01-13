@@ -1,6 +1,7 @@
 #include "imgui_renderer.hpp"
 #include "seop_context/context.hpp"
 
+#include "seop_graphic/device.hpp"
 #include "seop_scene/scene.hpp"
 #include "seop_scene/scene_command.hpp"
 #include "seop_scene/scene_message.hpp"
@@ -49,11 +50,14 @@ void Imgui_renderer::update(Context& ctx)
     if (ImGui::Button("Reset")) {
         state_.is_reset = true;
     }
-
+    // 공통
     show_frame_rate();
-    show_scene_force(ctx);
     show_particle_properties(ctx);
     show_camera_properties(ctx);
+    show_device_Compute_type(ctx);
+    ImGui::SliderFloat("Damping", &ctx.scene->data().forces.damping, MIN_DAMPING, MAX_DAMPING, "%.3f");
+    // 분리
+    show_scene_force(ctx);
 
     ImGui::End(); // 창 종료
     ImGui::Render();
@@ -101,12 +105,13 @@ void Imgui_renderer::show_frame_rate()
 
 void Imgui_renderer::show_scene_force(Context& ctx)
 {
-
-    ImGui::SliderFloat("Gravity", &ctx.scene->data().forces.gravity, MIN_GRAITY, MAX_GRAITY, "%1.f");
-    ImGui::SliderFloat("Vortex", &ctx.scene->data().forces.vortex, MIN_VORTEX, MAX_VORTEX, "%.2f");
-    ImGui::SliderFloat("Damping", &ctx.scene->data().forces.damping, MIN_DAMPING, MAX_DAMPING, "%.3f");
-    ImGui::SliderFloat("Magnetic Strength", &ctx.scene->data().forces.magentic_str, MIN_MAGNETIC_STRENGTH,
-                       MAX_MAGNETIC_STRENGTH, "%.3f");
+    if (ctx.device->compute_type() == graphic::Compute_type::Gravity) {
+        ImGui::SliderFloat("Gravity Intensity", &ctx.scene->data().forces.gravity, MIN_GRAITY, MAX_GRAITY, "%1.f");
+        ImGui::SliderFloat("Vortex", &ctx.scene->data().forces.vortex, MIN_VORTEX, MAX_VORTEX, "%.2f");
+    } else if (ctx.device->compute_type() == graphic::Compute_type::Electromagnetic) {
+        ImGui::SliderFloat("Magnetic Strength", &ctx.scene->data().forces.magentic_str, MIN_MAGNETIC_STRENGTH,
+                           MAX_MAGNETIC_STRENGTH, "%.3f");
+    }
 
 #if 0
         static bool on_gravity{false};
@@ -140,6 +145,7 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
 {
     ImGui::SliderFloat("Particle size", &ctx.scene->data().particle_properties.size, 1.0f, 10.0f, "%1.0f");
     ImGui::SliderFloat("Particle color", &ctx.scene->data().particle_properties.col, 0.0f, 1.0f, "%.3f");
+    ImGui::SliderFloat("Time scale", &ctx.scene->data().particle_properties.time_scale, -5.0f, 10.0f, "%.3f");
 
 #if 1
     size_t cnt = ctx.scene->data().particle_properties.count;
@@ -159,14 +165,21 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
 #endif
 }
 
-void Imgui_renderer::show_electronical_properties(Context& ctx)
-{
-}
-
 void Imgui_renderer::show_camera_properties(Context& ctx)
 {
     ImGui::DragFloat3("Camera Pos", &ctx.scene->camera().data().transform.pos.x_);
     ImGui::SliderFloat("Camera Speed", &ctx.scene->camera().data().transform.speed_scale, MIN_CAMERA_SPEED,
                        MAX_CAMERA_SPEED, "%.2f");
+}
+
+void Imgui_renderer::show_device_Compute_type(Context& ctx)
+{
+    // TODO : 커맨드로 구현
+    if (ImGui::Button("Gravity")) {
+        ctx.device->set_compute_type(graphic::Compute_type::Gravity);
+    }
+    if (ImGui::Button("Electromagnetic")) {
+        ctx.device->set_compute_type(graphic::Compute_type::Electromagnetic);
+    }
 }
 } // namespace seop::imgui

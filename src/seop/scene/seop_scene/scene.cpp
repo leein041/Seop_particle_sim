@@ -53,6 +53,14 @@ auto Scene::camera() -> Camera&
     return camera_;
 }
 
+auto Scene::get_hash(uint32_t v) -> uint32_t
+{
+
+    uint32_t state = v * 747796405u + 2891336453u;
+    uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
 void Scene::create_col_table()
 {
     for (int i = 0; i < 256; ++i) {
@@ -61,6 +69,11 @@ void Scene::create_col_table()
         // 파랑(0.0)에서 빨강(1.0)으로 보간
         col_table.push_back(math::Vec4{t, 0.0f, 1.0f - t, 1.0f});
     }
+}
+
+auto Scene::int_to_float(int v) -> float
+{
+    return static_cast<float>(v) * (1.0f / 4294967296.0f);
 }
 
 auto Scene::get_col(float t) -> math::Vec4&
@@ -76,18 +89,25 @@ void Scene::create_particles(size_t count)
     data_.entities.particles.clear();
     data_.entities.particles.reserve(count);
     for (int i = 0; i < count; ++i) {
-        float radius = std::sqrt(static_cast<float>(rand()) / RAND_MAX) * 200.0f;
-        float theta = (static_cast<float>(rand()) / RAND_MAX) * 1.0f * math::PI;
-        float phi = (static_cast<float>(rand()) / RAND_MAX) * 2.0f * math::PI;
+        uint32_t   r1_uint = get_hash(i);
+        uint32_t   r2_uint = get_hash(i + static_cast<int>(count)); // 오프셋을 주어 겹침 방지
+        uint32_t   r3_uint = get_hash(i + static_cast<int>(count) * 2u);
 
-#if 1
-        math::Vec4 pos{radius * std::sin(theta) * std::cos(phi), radius * std::sin(theta) * std::sin(phi),
-                       radius * std::cos(theta), 1.0};
-#endif
+        float      r1 = int_to_float(r1_uint);
+        float      r2 = int_to_float(r2_uint);
+        float      r3 = int_to_float(r3_uint);
 
+        float      cos_θ = cos(r1 * math::π);
+        float      sin_θ = sin(r1 * math::π);
+        float      cos_φ = cos(r2 * 2.0f * math::π); // -1 ~ 1
+        float      sin_φ = sin(r2 * 2.0f * math::π); // -1 ~ 1
+        float      r = r3 * 100.0f;
+
+        math::Vec4 pos{r * sin_θ * cos_φ, r * sin_θ * sin_φ, r * cos_θ, 1.0f};
+        math::Vec4 vel{0.0f, 0.0f, 0.0f, 0.0f};
         math::Vec4 col{1.0f, 1.0f, 1.0f, 1.0f};
 
-        data_.entities.particles.push_back(entity::Particle{pos, pos, col});
+        data_.entities.particles.push_back(entity::Particle{pos, vel, col});
     }
 }
 

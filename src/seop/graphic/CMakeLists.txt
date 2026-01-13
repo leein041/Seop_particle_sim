@@ -6,17 +6,19 @@ target_sources(${_target} PRIVATE
     seop_graphic/device.hpp
     seop_graphic/device.cpp
     seop_graphic/vertex.hpp
+    seop_graphic/compute_shaders/gravity_cs_source.hpp
+    seop_graphic/compute_shaders/electro_cs_shader.hpp
 )
 
 target_link_libraries(${_target}
     PUBLIC
     seop::math
     seop::entity
-    seop::scene
-    seop::input
-    seop::imgui
     seop::context
     seop::msg
+    
+    seop::scene
+    seop::input
 )
 
 target_include_directories(${_target} PUBLIC

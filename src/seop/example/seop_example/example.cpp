@@ -144,18 +144,18 @@ class Example
         input_.reset();
         scene_.reset();
 
-        device_.update_shader_buffer(device_.particle_sb, 0,
+        device_.update_shader_buffer(device_.shader_buffer_data().particle_sb, 0,
                                      sizeof(entity::Particle) * scene_.data().particle_properties.count,
                                      scene_.data().entities.particles.data());
-        device_.update_shader_buffer(device_.ssbo_attractor, 1,
+        device_.update_shader_buffer(device_.shader_buffer_data().attractor_sb, 1,
                                      sizeof(entity::Attractor) * scene_.data().attractor_properties.attractor_count,
                                      scene_.data().entities.attractors.data());
 
-        device_.update_shader_buffer(device_.grid_sb, 2, sizeof(math::Vec4) * device_.grid_.size(),
-                                     device_.grid_.data());
+        device_.update_shader_buffer(device_.shader_buffer_data().grid_sb, 2, sizeof(graphic::Grid),
+                                     &device_.grid()._0);
     }
 
-  private:
+  private:  
     Context                               context_;
     msg::Message_queue                    msg_queue_;
     command::Command_list                 command_list_;

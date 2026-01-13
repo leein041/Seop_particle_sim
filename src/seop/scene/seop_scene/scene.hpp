@@ -40,6 +40,8 @@ class Particle_data
     float  size{1.0f};
     float  col{0.0f};
     size_t count{50000};
+    //temp
+    float time_scale{1.0f};
 };
 
 class Attractor_data
@@ -82,27 +84,30 @@ class Scene
   public:
     Scene() noexcept;
     ~Scene() = default;
-    void                    init();
-    void                    update();
-    void                    reset();
-    void                    register_commnad(Context& ctx);
-    void                    create_particles(size_t count);
-    void                    create_attractors(size_t count);
-    void                    update_camera(float dt, Context& ctx);
+    void               init();
+    void               update();
+    void               reset();
+    void               register_commnad(Context& ctx);
+    void               create_particles(size_t count);
+    void               create_attractors(size_t count);
+    void               update_camera(float dt, Context& ctx);
+    auto               get_col(float t) -> math::Vec4&;
 
-    [[nodiscard]] auto      data() const -> const Scene_data&;
-    [[nodiscard]] auto      data() -> Scene_data&;
-    [[nodiscard]] auto      camera() const -> const Camera&;
-    [[nodiscard]] auto      camera() -> Camera&;
+    [[nodiscard]] auto data() const -> const Scene_data&;
+    [[nodiscard]] auto data() -> Scene_data&;
+    [[nodiscard]] auto camera() const -> const Camera&;
+    [[nodiscard]] auto camera() -> Camera&;
 
     // temp
-    auto                    get_col(float t) -> math::Vec4&;
-    std::vector<math::Vec4> col_table;
 
+    auto               get_hash(uint32_t v) -> uint32_t;
+    auto               int_to_float(int v) -> float;
+    
   private:
-    void       create_col_table();
-    Scene_data data_;
-    Camera     camera_;
+    void                    create_col_table();
+    std::vector<math::Vec4> col_table;
+    Scene_data              data_;
+    Camera                  camera_;
 };
 
 } // namespace seop::scene

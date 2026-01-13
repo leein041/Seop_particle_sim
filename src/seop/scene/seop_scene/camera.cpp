@@ -30,7 +30,7 @@ void Camera::make_view()
 
 void Camera::make_projection()
 {
-    data_.projection = math::Matrix::CreatePerspective(2 * math::PI / 6.0f, data_.frustum.aspect, data_.frustum.near,
+    data_.projection = math::Matrix::CreatePerspective(2 * math::π / 6.0f, data_.frustum.aspect, data_.frustum.near,
                                                        data_.frustum.far);
 }
 

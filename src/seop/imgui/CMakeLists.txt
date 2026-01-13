@@ -14,10 +14,12 @@ target_link_libraries(${_target}
     glfw
     OpenGL::GL
 
-    seop::window
     seop::command
     seop::math
+
+    seop::window
     seop::scene
+    seop::graphic
 )
 
 target_include_directories(${_target} PUBLIC

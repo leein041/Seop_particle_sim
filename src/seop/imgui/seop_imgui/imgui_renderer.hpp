@@ -33,10 +33,10 @@ class Imgui_renderer
 
   private:
     void show_frame_rate              ();
-    void show_scene_force             (Context &ctx);
     void show_particle_properties     (Context &ctx);
-    void show_electronical_properties (Context &ctx);
     void show_camera_properties       (Context &ctx);
+    void show_device_Compute_type     (Context &ctx);
+    void show_scene_force             (Context &ctx);
 
   private:
     Imgui_state state_;
