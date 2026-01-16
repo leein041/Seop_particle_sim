@@ -1,97 +1,29 @@
 #include "imgui_renderer.hpp"
 #include "seop_context/context.hpp"
-
 #include "seop_graphic/device.hpp"
 #include "seop_scene/scene.hpp"
 #include "seop_scene/scene_command.hpp"
 #include "seop_scene/scene_message.hpp"
-#include "seop_window/glf_window.hpp"
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <imgui/imgui.h>
 
 #include <format>
-#include <imgui/imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 #include <iostream>
 
 namespace seop::imgui
 {
+
 Imgui_renderer::Imgui_renderer() noexcept
 {
 }
 
-void Imgui_renderer::init(Context& ctx)
+
+
+void Imgui_renderer::show_frame_rate(Context& ctx)
 {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-
-    // 스타일 설정
-    ImGui::StyleColorsDark();
-
-    // 백엔드 연결
-    ImGui_ImplGlfw_InitForOpenGL(ctx.window->glfw_window(), true);
-    ImGui_ImplOpenGL3_Init("#version 130");
-}
-
-void Imgui_renderer::update(Context& ctx)
-{
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    ImGui::SetNextWindowBgAlpha(0.25f); // 배경 투명도
-    ImGui::Begin("Debug Panel");        // 제목
-
-    state_.is_ui_hovered = ImGui::GetIO().WantCaptureMouse;
-    if (ImGui::Button("Reset")) {
-        state_.is_reset = true;
-    }
-    // 공통
-    show_frame_rate();
-    show_particle_properties(ctx);
-    show_camera_properties(ctx);
-    show_device_Compute_type(ctx);
-    ImGui::SliderFloat("Damping", &ctx.scene->data().forces.damping, MIN_DAMPING, MAX_DAMPING, "%.3f");
-    // 분리
-    show_scene_force(ctx);
-
-    ImGui::End(); // 창 종료
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void Imgui_renderer::end_frame()
-{
-    // reset context
-    state_.is_reset = false;
-    state_.is_ui_hovered = false;
-}
-
-void Imgui_renderer::shut_down()
-{
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-}
-
-auto Imgui_renderer::state() const -> const Imgui_state&
-{
-    return state_;
-}
-
-auto Imgui_renderer::inv_frame_rate() const -> float
-{
-    return inv_frame_rate_;
-}
-
-void Imgui_renderer::show_frame_rate()
-{
-    if (ImGui::SliderFloat("Frame Rate", &frame_rate_, 1.0f, 240.0f, "%1.0f")) {
-        inv_frame_rate_ = 1 / frame_rate_;
+    graphic::Device_data& data = ctx.device->data();
+    if (ImGui::SliderFloat("Frame Rate", &data.frame_rate, 1.0f, 240.0f, "%1.0f")) {
+        data.inv_frame_rate = 1 / data.frame_rate;
     }
 
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
@@ -105,14 +37,16 @@ void Imgui_renderer::show_frame_rate()
 
 void Imgui_renderer::show_scene_force(Context& ctx)
 {
-    if (ctx.device->compute_type() == graphic::Compute_type::Gravity) {
-        ImGui::SliderFloat("Gravity Intensity", &ctx.scene->data().forces.gravity, MIN_GRAITY, MAX_GRAITY, "%1.f");
-        ImGui::SliderFloat("Vortex", &ctx.scene->data().forces.vortex, MIN_VORTEX, MAX_VORTEX, "%.2f");
-    } else if (ctx.device->compute_type() == graphic::Compute_type::Electromagnetic) {
-        ImGui::SliderFloat("Magnetic Strength", &ctx.scene->data().forces.magentic_str, MIN_MAGNETIC_STRENGTH,
-                           MAX_MAGNETIC_STRENGTH, "%.3f");
-    }
+    scene::Scene_force& forces = ctx.scene->data().forces;
 
+    if (ctx.device->compute_type() == graphic::Compute_type::Gravity) {
+        ImGui::SliderFloat("Gravity Intensity", &forces.gravity, MIN_GRAITY, MAX_GRAITY, "%1.f");
+        ImGui::SliderFloat("Vortex", &forces.vortex, MIN_VORTEX, MAX_VORTEX, "%.2f");
+    } else if (ctx.device->compute_type() == graphic::Compute_type::Electromagnetic) {
+        ImGui::SliderFloat("Magnetic Strength", &forces.magentic_str, MIN_MAGNETIC_STRENGTH, MAX_MAGNETIC_STRENGTH,
+                           "%.3f");
+    }
+    ImGui::SliderFloat("Damping", &forces.damping, MIN_DAMPING, MAX_DAMPING, "%.3f");
 #if 0
         static bool on_gravity{false};
         if (ImGui::Checkbox("Gravity on/off", &on_gravity))
@@ -141,14 +75,21 @@ void Imgui_renderer::show_scene_force(Context& ctx)
 #endif
 }
 
+auto Imgui_renderer::hovering_ui() -> bool
+{
+    return ImGui::GetIO().WantCaptureMouse;
+}
+
+
 void Imgui_renderer::show_particle_properties(Context& ctx)
 {
-    ImGui::SliderFloat("Particle size", &ctx.scene->data().particle_properties.size, 1.0f, 10.0f, "%1.0f");
-    ImGui::SliderFloat("Particle color", &ctx.scene->data().particle_properties.col, 0.0f, 1.0f, "%.3f");
-    ImGui::SliderFloat("Time scale", &ctx.scene->data().particle_properties.time_scale, -5.0f, 10.0f, "%.3f");
+    scene::Particle_propetires& properties = ctx.scene->data().particle_properties;
+    ImGui::SliderFloat("Particle size", &properties.size, 1.0f, 10.0f, "%1.0f");
+    ImGui::SliderFloat("Particle color", &properties.col, 0.0f, 1.0f, "%.3f");
+    ImGui::SliderFloat("Time scale", &properties.time_scale, -5.0f, 10.0f, "%.1f");
 
 #if 1
-    size_t cnt = ctx.scene->data().particle_properties.count;
+    size_t cnt = properties.count;
     ImGui::InputScalar("Particle count", ImGuiDataType_U64, &cnt, NULL, NULL, "%zu");
 
     if (ImGui::IsItemDeactivatedAfterEdit()) // enter
@@ -167,12 +108,12 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
 
 void Imgui_renderer::show_camera_properties(Context& ctx)
 {
-    ImGui::DragFloat3("Camera Pos", &ctx.scene->camera().data().transform.pos.x_);
-    ImGui::SliderFloat("Camera Speed", &ctx.scene->camera().data().transform.speed_scale, MIN_CAMERA_SPEED,
-                       MAX_CAMERA_SPEED, "%.2f");
+    scene::Camera_data& cam = ctx.scene->camera().data();
+    ImGui::DragFloat3("Camera Pos", &cam.transform.pos.x_);
+    ImGui::SliderFloat("Camera Speed", &cam.transform.speed_scale, MIN_CAMERA_SPEED, MAX_CAMERA_SPEED, "%.2f");
 }
 
-void Imgui_renderer::show_device_Compute_type(Context& ctx)
+void Imgui_renderer::show_device_data(Context& ctx)
 {
     // TODO : 커맨드로 구현
     if (ImGui::Button("Gravity")) {
@@ -181,5 +122,23 @@ void Imgui_renderer::show_device_Compute_type(Context& ctx)
     if (ImGui::Button("Electromagnetic")) {
         ctx.device->set_compute_type(graphic::Compute_type::Electromagnetic);
     }
+    ImGui::SliderFloat("fade speed", &ctx.device->fade_scale, 1.0f, 0.001f, "%.3f");
+}
+
+void Imgui_renderer::init()
+{
+    IMGUI_CHECKVERSION();
+}
+
+void Imgui_renderer::begin()
+{
+
+    ImGui::SetNextWindowBgAlpha(0.25f); // 배경 투명도
+    ImGui::Begin("Debug Panel");        // 제목
+}
+
+void Imgui_renderer::end()
+{
+    ImGui::End(); // 창 종료
 }
 } // namespace seop::imgui

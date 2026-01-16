@@ -5,6 +5,8 @@ add_library(seop::imgui ALIAS ${_target})
 target_sources(${_target} PRIVATE
     seop_imgui/imgui_renderer.cpp 
     seop_imgui/imgui_renderer.hpp
+    seop_imgui/imgui_core.cpp
+    seop_imgui/imgui_core.hpp
 )
 
 target_link_libraries(${_target}

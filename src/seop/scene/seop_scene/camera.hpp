@@ -4,8 +4,7 @@
 
 namespace seop::scene
 {
-enum class Projection_type
-{
+enum class Projection_type {
     Perspective,  // 원근 카메라
     Orthographic, // 직교 카메라
     end,
@@ -34,6 +33,12 @@ class Camera_frustum
     float far{10000.0f};
 };
 
+class Camera_state
+{
+  public:
+    bool is_move{false};
+};
+
 class Camera_data
 {
   public:
@@ -52,17 +57,22 @@ class Camera
     ~Camera() = default;
     void               init();
     void               update();
-    void               make_view();
-    void               make_projection();
-
+    void               reset_state();
     [[nodiscard]] auto data() const -> const Camera_data&;
     [[nodiscard]] auto data() -> Camera_data&;
+    [[nodiscard]] auto camera_state() const -> const Camera_state&;
+    [[nodiscard]] auto camera_state() -> Camera_state&;
     void               set_transform(const Camera_trasform& tr);
 
     // temp
     void               update_transform();
 
   private:
-    Camera_data data_;
+    void make_view();
+    void make_projection();
+
+  private:
+    Camera_data  data_;
+    Camera_state camera_state_;
 };
 } // namespace seop::scene

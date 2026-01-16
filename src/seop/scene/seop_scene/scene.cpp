@@ -30,6 +30,11 @@ void Scene::update()
 {
 }
 
+void Scene::end_frame()
+{
+    camera_.reset_state();
+}
+
 void Scene::reset()
 {
     Scene_data new_data;
@@ -123,21 +128,33 @@ void Scene::create_attractors(size_t count)
 
 void Scene::update_camera(float dt, Context& ctx)
 {
-
+    Camera_state& cam_state = camera_.camera_state();
     Camera_trasform& tr = camera_.data().transform;
     // NOTE : it's RH
-    if (ctx.input->get_key(input::Key_code::W))
+    if (ctx.input->get_key(input::Key_code::W)) {
         tr.pos += tr.forward * tr.speed_scale * dt;
-    if (ctx.input->get_key(input::Key_code::S))
+        cam_state.is_move = true;
+    }
+    if (ctx.input->get_key(input::Key_code::S)) {
         tr.pos -= tr.forward * tr.speed_scale * dt;
-    if (ctx.input->get_key(input::Key_code::A))
+        cam_state.is_move = true;
+    }
+    if (ctx.input->get_key(input::Key_code::A)) {
         tr.pos -= tr.right * tr.speed_scale * dt;
-    if (ctx.input->get_key(input::Key_code::D))
+        cam_state.is_move = true;
+    }
+    if (ctx.input->get_key(input::Key_code::D)) {
         tr.pos += tr.right * tr.speed_scale * dt;
-    if (ctx.input->get_key(input::Key_code::E))
+        cam_state.is_move = true;
+    }
+    if (ctx.input->get_key(input::Key_code::E)) {
         tr.pos += tr.up * tr.speed_scale * dt;
-    if (ctx.input->get_key(input::Key_code::Q))
+        cam_state.is_move = true;
+    }
+    if (ctx.input->get_key(input::Key_code::Q)) {
         tr.pos -= tr.up * tr.speed_scale * dt;
+        cam_state.is_move = true;
+    }
 
     if (ctx.input->get_key(input::Key_code::RButton)) {
         Vec2  delta = ctx.input->get_delta_cursor_pos();
@@ -148,6 +165,8 @@ void Scene::update_camera(float dt, Context& ctx)
         // 각도 업데이트
         tr.yaw += dx;
         tr.pitch -= dy;
+        cam_state.is_move = true;
+
     }
     if (ctx.input->get_key_down(input::Key_code::LButton)) {
         Vec2   pos_ndc = ctx.window->get_cursor_pos_ndc();
@@ -166,7 +185,6 @@ void Scene::update_camera(float dt, Context& ctx)
     }
     // 위치가 변했으므로 행렬 다시 계산
     // test
-    camera_.set_transform(tr);
     camera_.update();
 }
 

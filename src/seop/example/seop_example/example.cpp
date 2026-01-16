@@ -5,7 +5,7 @@
 #include "seop_entity/attractor.hpp"
 #include "seop_entity/particle.hpp"
 #include "seop_graphic/device.hpp"
-#include "seop_imgui/imgui_renderer.hpp"
+#include "seop_imgui/imgui_core.hpp"
 #include "seop_input/input.hpp"
 #include "seop_math/math.hpp"
 #include "seop_message/message.hpp"
@@ -44,7 +44,7 @@ class Example
             end_frame();
         }
         device_.shut_down();
-        imgui_.shut_down();
+        imgui_core_.shut_down();
     }
 
     void tick()
@@ -63,7 +63,7 @@ class Example
         m_current_time = new_time;
         m_time_accumulator += frame_time;
 
-        float        inv_frame_rate = imgui_.inv_frame_rate();
+        float        inv_frame_rate = device_.data().inv_frame_rate;
         const double dt = 1.0 * inv_frame_rate;
         float        dt_f = static_cast<float>(dt);
 
@@ -77,10 +77,11 @@ class Example
             m_time += dt;
         }
         // render
-        render();
+        device_.render(context_);
+        imgui_core_.render(context_);
 
         // reset
-        if (imgui_.state().is_reset) {
+        if (imgui_core_.state().is_reset) {
             reset();
         }
     }
@@ -97,13 +98,13 @@ class Example
         context_.window = &window_;
         context_.scene = &scene_;
         context_.device = &device_;
-        context_.imgui = &imgui_;
+        context_.imgui = &imgui_core_;
         context_.input = &input_;
 
         window_.init();
         scene_.init();
         device_.init(context_);
-        imgui_.init(context_);
+        imgui_core_.init(context_);
         input_.init();
 
         reset();
@@ -113,18 +114,10 @@ class Example
 
     void update(float dt_f)
     {
-        imgui_.update(context_);
+        imgui_core_.update();
         input_.update(context_);
-        if (!imgui_.state().is_ui_hovered)
+        if (!imgui_core_.state().is_ui_hovered)
             scene_.update_camera(dt_f, context_);
-    }
-
-    void render()
-    {
-        device_.prepare_grid(context_);
-        device_.draw_grid();
-        device_.prepare_draw(context_);
-        device_.draw(scene_.data().particle_properties.count);
     }
 
     void begin_frame()
@@ -135,7 +128,8 @@ class Example
     void end_frame()
     {
         msg_queue_.Process();
-        imgui_.end_frame();
+        imgui_core_.end_frame();
+        scene_.end_frame();
         window_.buffer_swap();
     }
 
@@ -144,24 +138,21 @@ class Example
         input_.reset();
         scene_.reset();
 
-        device_.update_shader_buffer(device_.shader_buffer_data().particle_sb, 0,
-                                     sizeof(entity::Particle) * scene_.data().particle_properties.count,
-                                     scene_.data().entities.particles.data());
-        device_.update_shader_buffer(device_.shader_buffer_data().attractor_sb, 1,
-                                     sizeof(entity::Attractor) * scene_.data().attractor_properties.attractor_count,
-                                     scene_.data().entities.attractors.data());
+        device_.bind_shader_buffer(device_.shader_buffer_data().particle_sb, 0,
+                                   sizeof(entity::Particle) * scene_.data().particle_properties.count,
+                                   scene_.data().entities.particles.data());
 
-        device_.update_shader_buffer(device_.shader_buffer_data().grid_sb, 2, sizeof(graphic::Grid),
-                                     &device_.grid()._0);
+        device_.bind_shader_buffer(device_.shader_buffer_data().grid_sb, 2, sizeof(graphic::Screen_quad),
+                                   &device_.grid()._0);
     }
 
-  private:  
+  private:
     Context                               context_;
     msg::Message_queue                    msg_queue_;
     command::Command_list                 command_list_;
     window::Glf_window                    window_;
     graphic::Device                       device_;
-    imgui::Imgui_renderer                 imgui_;
+    imgui::Imgui_core                     imgui_core_;
     scene::Scene                          scene_;
     input::Input                          input_;
 

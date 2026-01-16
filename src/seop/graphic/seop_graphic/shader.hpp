@@ -1,6 +1,6 @@
-namespace
+#pragma once
+namespace seop::graphic
 {
-
 const char *grid_vs_source = R"(
 #version 430 core
 

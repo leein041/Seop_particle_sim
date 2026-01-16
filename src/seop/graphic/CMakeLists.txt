@@ -6,7 +6,8 @@ target_sources(${_target} PRIVATE
     seop_graphic/device.hpp
     seop_graphic/device.cpp
     seop_graphic/vertex.hpp
-    seop_graphic/compute_shaders/gravity_cs_source.hpp
+    seop_graphic/quad_shader.hpp
+    seop_graphic/compute_shaders/gravity_cs_source.hpp 
     seop_graphic/compute_shaders/electro_cs_shader.hpp
 )
 

@@ -33,15 +33,15 @@ struct Scene_force
     float    magentic_str{0.0f};
 };
 
-class Particle_data
+class Particle_propetires
 {
   public:
     bool   particle_reset{false};
     float  size{1.0f};
     float  col{0.0f};
     size_t count{50000};
-    //temp
-    float time_scale{1.0f};
+    // temp
+    float  time_scale{1.0f};
 };
 
 class Attractor_data
@@ -68,12 +68,14 @@ class Scene_context
   public:
 };
 
+
 class Scene_data
+
 {
   public:
     Scene_force                   forces;
     Scene_entities                entities;
-    Particle_data                 particle_properties;
+    Particle_propetires                 particle_properties;
     Attractor_data                attractor_properties;
     Scene_electronical_properites electronical_properites;
 };
@@ -86,6 +88,8 @@ class Scene
     ~Scene() = default;
     void               init();
     void               update();
+    void               end_frame();
+
     void               reset();
     void               register_commnad(Context& ctx);
     void               create_particles(size_t count);
@@ -102,7 +106,7 @@ class Scene
 
     auto               get_hash(uint32_t v) -> uint32_t;
     auto               int_to_float(int v) -> float;
-    
+
   private:
     void                    create_col_table();
     std::vector<math::Vec4> col_table;
