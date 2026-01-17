@@ -1,19 +1,17 @@
 #pragma once
 namespace seop::graphic
 {
-const char *grid_vs_source = R"(
+const char* grid_vs_source = R"(
 #version 430 core
 
-layout(std430, binding = 2) buffer Grid
-{
-    vec4 grid_vertex[];
-};
+
+layout (location = 0) in vec4 aPos;
+layout (location = 1) in vec4 aColor;
 uniform mat4 view;
 uniform mat4 projection;
 out vec4 worldPos;
 
 void main() {
-    vec4 aPos = grid_vertex[gl_VertexID];
     worldPos = vec4(aPos.xyz * 100000.0, 1.0);
     gl_Position = projection * view * worldPos ;
 }

@@ -39,10 +39,10 @@ void Imgui_renderer::show_scene_force(Context& ctx)
 {
     scene::Scene_force& forces = ctx.scene->data().forces;
 
-    if (ctx.device->compute_type() == graphic::Compute_type::Gravity) {
+    if (ctx.device->data().compute_type == graphic::Compute_type::Gravity) {
         ImGui::SliderFloat("Gravity Intensity", &forces.gravity, MIN_GRAITY, MAX_GRAITY, "%1.f");
         ImGui::SliderFloat("Vortex", &forces.vortex, MIN_VORTEX, MAX_VORTEX, "%.2f");
-    } else if (ctx.device->compute_type() == graphic::Compute_type::Electromagnetic) {
+    } else if (ctx.device->data().compute_type == graphic::Compute_type::Electromagnetic) {
         ImGui::SliderFloat("Magnetic Strength", &forces.magentic_str, MIN_MAGNETIC_STRENGTH, MAX_MAGNETIC_STRENGTH,
                            "%.3f");
     }
@@ -122,7 +122,7 @@ void Imgui_renderer::show_device_data(Context& ctx)
     if (ImGui::Button("Electromagnetic")) {
         ctx.device->set_compute_type(graphic::Compute_type::Electromagnetic);
     }
-    ImGui::SliderFloat("fade speed", &ctx.device->fade_scale, 1.0f, 0.001f, "%.3f");
+    ImGui::SliderFloat("fade speed", &ctx.device->data().fade_scale, 1.0f, 0.001f, "%.3f");
 }
 
 void Imgui_renderer::init()

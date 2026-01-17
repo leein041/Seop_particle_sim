@@ -2,7 +2,7 @@
 
 namespace seop::graphic
 {
-const char* ampere_cs_source = // B = I / 2πr
+const char* electromagnetic_cs_source = // B = I / 2πr
     R"(#version 430 core
         layout(local_size_x = 256) in; // 워크그룹 크기
 
@@ -41,29 +41,37 @@ const char* ampere_cs_source = // B = I / 2πr
 
             vec3 pos = particles[i].pos.xyz;
             vec3 vel = particles[i].vel.xyz;
-            vec3 positve_charge_pos = vec3(100.0, 0.0, 0.0);
-            vec3 negtive_charge_pos = vec3(-100.0, 0.0, 0.0);
+
+             // E. 두 전하 생성 ( ±1C 가정 )
+            vec3 positve_charge_pos = vec3(1000.0, 0.0, 0.0);
+            vec3 negtive_charge_pos = vec3(700.0, 0.0, 0.0);
+
+            // E. E = 1/4πε * q/r² = 112,994,350,282 *  1/r² 
+            float dis_from_pos = max(5.0, length(pos - positve_charge_pos));
+            float dis_from_neg = max(5.0, length(pos - negtive_charge_pos));
+            vec3 dir_from_pos = normalize(pos - positve_charge_pos);
+            vec3 dir_to_neg = normalize(negtive_charge_pos - pos);
+
+            vec3 E = vec3(0.0);
+            E += dir_from_pos * 112994350282.0 / (dis_from_pos * dis_from_pos);
+            E += dir_to_neg * 112994350282.0 / (dis_from_neg * dis_from_neg);
+
+            // B. 전류 가정 ( +y 방향 )
+            // B. B = μ₀/4π ∫I*r̂/r² dl ( bio-savar )
+            // 무한히 긴 도선인 경우 B = ̂φ * μ₀I/2πr (μ₀ = 4π x 10e-7) = 12.5663 x 10e-7
+            float B_scale = 1000.0;
+            vec3 B = vec3(0.0);
+            vec3 I_dir = vec3(0.0,1.0,0.0);
+            vec3 r = vec3(pos.x,0.0,pos.z);
+            float r_dis = max(5.0, length(r));
+            vec3 r_dir = normalize(r);
+            vec3 B_dir = cross(I_dir,r_dir);
+            B += B_dir * 4 * B_scale / (2 * r_dis);
+            
 
             if(i % 2 == 0){
-               // 1. 두 전하 생성 ( ±1C 가정 )
-
-               // 2. 공식 대입 E = 1/4πε * q/r² = 112,994,350,282 *  1/r² 
-               vec3 E = vec3(0.0);
-               float dis_from_pos = max(5.0, length(pos - positve_charge_pos));
-               float dis_from_neg = max(5.0, length(pos - negtive_charge_pos));
-               vec3 dir_from_pos = normalize(pos - positve_charge_pos);
-               vec3 dir_to_neg = normalize(negtive_charge_pos - pos);
-
-               E += dir_from_pos * 112994350282.0 / (dis_from_pos * dis_from_pos);
-               E += dir_to_neg * 112994350282.0 / (dis_from_neg * dis_from_pos);
-
-               // 3. 입자의 움직임 방향 = 전기장 방향 / 속도 = 전기장 세기  F = qE, a = qE / m (q = 1, m = 1 가정 )
-       
+                particles[i].col = vec4(1.0, 0.0, 0.0, 1.0);
                vel = E;
-               if(length(vel) > 300.0)
-               {
-                   vel = normalize(vel) * 300;
-               }
 
                 // 4. 입자 재생성 (음전하에 너무 가까워지면 양전하로 점프)
                 float reset_dist = 10.0; // 음전하와 입자 사이의 거리 임계값
@@ -98,15 +106,17 @@ const char* ampere_cs_source = // B = I / 2πr
 
                 pos = positve_charge_pos + sphere_offset;
                 vel = normalize(sphere_offset) * 1.0;
-                particles[i].col = vec4(1.0, 0.0, 0.0, 1.0);
                 }
             }else{
+                vel = B;       
 
+                particles[i].col = vec4(0.0, 1.0, 0.0, 1.0);
             }
-            
+            if(length(vel) > 300.0)
+            {
+                vel = normalize(vel) * 300;
+            }
             pos = pos + vel  * u_dt * u_time_scale;
-
-
 
             // save
             particles[i].pos.xyz = pos;

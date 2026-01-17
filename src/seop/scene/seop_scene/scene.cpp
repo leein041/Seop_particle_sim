@@ -106,7 +106,7 @@ void Scene::create_particles(size_t count)
         float      sin_θ = sin(r1 * math::π);
         float      cos_φ = cos(r2 * 2.0f * math::π); // -1 ~ 1
         float      sin_φ = sin(r2 * 2.0f * math::π); // -1 ~ 1
-        float      r = r3 * 100.0f;
+        float      r = r3 * 1000.0f;
 
         math::Vec4 pos{r * sin_θ * cos_φ, r * sin_θ * sin_φ, r * cos_θ, 1.0f};
         math::Vec4 vel{0.0f, 0.0f, 0.0f, 0.0f};
@@ -126,33 +126,33 @@ void Scene::create_attractors(size_t count)
     }
 }
 
-void Scene::update_camera(float dt, Context& ctx)
+void Scene::update_camera(Context& ctx)
 {
     Camera_state& cam_state = camera_.camera_state();
     Camera_trasform& tr = camera_.data().transform;
     // NOTE : it's RH
     if (ctx.input->get_key(input::Key_code::W)) {
-        tr.pos += tr.forward * tr.speed_scale * dt;
+        tr.pos += tr.forward * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
     if (ctx.input->get_key(input::Key_code::S)) {
-        tr.pos -= tr.forward * tr.speed_scale * dt;
+        tr.pos -= tr.forward * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
     if (ctx.input->get_key(input::Key_code::A)) {
-        tr.pos -= tr.right * tr.speed_scale * dt;
+        tr.pos -= tr.right * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
     if (ctx.input->get_key(input::Key_code::D)) {
-        tr.pos += tr.right * tr.speed_scale * dt;
+        tr.pos += tr.right * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
     if (ctx.input->get_key(input::Key_code::E)) {
-        tr.pos += tr.up * tr.speed_scale * dt;
+        tr.pos += tr.up * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
     if (ctx.input->get_key(input::Key_code::Q)) {
-        tr.pos -= tr.up * tr.speed_scale * dt;
+        tr.pos -= tr.up * tr.speed_scale * ctx.f_dt;
         cam_state.is_move = true;
     }
 

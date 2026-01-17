@@ -65,20 +65,20 @@ class Example
 
         float        inv_frame_rate = device_.data().inv_frame_rate;
         const double dt = 1.0 * inv_frame_rate;
-        float        dt_f = static_cast<float>(dt);
+       ctx_.f_dt = static_cast<float>(dt);
 
         // update
-        update(dt_f);
+        update();
 
         // compute
         while (m_time_accumulator >= dt) {
-            device_.compute(dt_f, context_);
+            device_.compute(ctx_);
             m_time_accumulator -= dt;
             m_time += dt;
         }
         // render
-        device_.render(context_);
-        imgui_core_.render(context_);
+        device_.render(ctx_);
+        imgui_core_.render(ctx_);
 
         // reset
         if (imgui_core_.state().is_reset) {
@@ -88,23 +88,23 @@ class Example
 
     void register_command()
     {
-        scene_.register_commnad(context_);
+        scene_.register_commnad(ctx_);
     }
 
     void init()
     {
-        context_.command_list = &command_list_;
-        context_.msg_queue = &msg_queue_;
-        context_.window = &window_;
-        context_.scene = &scene_;
-        context_.device = &device_;
-        context_.imgui = &imgui_core_;
-        context_.input = &input_;
+        ctx_.command_list = &command_list_;
+        ctx_.msg_queue = &msg_queue_;
+        ctx_.window = &window_;
+        ctx_.scene = &scene_;
+        ctx_.device = &device_;
+        ctx_.imgui = &imgui_core_;
+        ctx_.input = &input_;
 
         window_.init();
         scene_.init();
-        device_.init(context_);
-        imgui_core_.init(context_);
+        device_.init(ctx_);
+        imgui_core_.init(ctx_);
         input_.init();
 
         reset();
@@ -112,12 +112,12 @@ class Example
         register_command();
     }
 
-    void update(float dt_f)
+    void update()
     {
         imgui_core_.update();
-        input_.update(context_);
+        input_.update(ctx_);
         if (!imgui_core_.state().is_ui_hovered)
-            scene_.update_camera(dt_f, context_);
+            scene_.update_camera(ctx_);
     }
 
     void begin_frame()
@@ -137,17 +137,10 @@ class Example
     {
         input_.reset();
         scene_.reset();
-
-        device_.bind_shader_buffer(device_.shader_buffer_data().particle_sb, 0,
-                                   sizeof(entity::Particle) * scene_.data().particle_properties.count,
-                                   scene_.data().entities.particles.data());
-
-        device_.bind_shader_buffer(device_.shader_buffer_data().grid_sb, 2, sizeof(graphic::Screen_quad),
-                                   &device_.grid()._0);
     }
 
   private:
-    Context                               context_;
+    Context                               ctx_;
     msg::Message_queue                    msg_queue_;
     command::Command_list                 command_list_;
     window::Glf_window                    window_;

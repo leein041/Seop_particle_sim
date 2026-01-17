@@ -26,5 +26,7 @@ class Context
     imgui::Imgui_core*     imgui{nullptr};
     scene::Scene*          scene{nullptr};
     input::Input*          input{nullptr};
+
+    float f_dt;
 };
 } // namespace seop

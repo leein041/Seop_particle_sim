@@ -94,7 +94,7 @@ class Scene
     void               register_commnad(Context& ctx);
     void               create_particles(size_t count);
     void               create_attractors(size_t count);
-    void               update_camera(float dt, Context& ctx);
+    void               update_camera(Context& ctx);
     auto               get_col(float t) -> math::Vec4&;
 
     [[nodiscard]] auto data() const -> const Scene_data&;
