@@ -1,11 +1,17 @@
 #pragma once
 #include "seop_math/math.hpp"
 
-#include <GL/glew.h>
 #include <vector>
 
-namespace seop::graphic
+namespace seop::primitive
 {
+
+class Vertex_p
+{
+  public:
+    math::Vec4 pos{math::Vec4::Zero};
+};
+
 class Vertex_pc
 {
   public:
@@ -24,14 +30,14 @@ template <typename T>
 class Vertex_buffer // = buffer
 {
   public:
-    std::vector<T> vertices_;
-    GLuint         id_;
+    std::vector<T> vertices;
+    uint32_t       id;
 };
 
 template <typename T>
 class Vertex_array // = input layout
 {
   public:
-    GLuint id_;
+    uint32_t id;
 };
 } // namespace seop::graphic

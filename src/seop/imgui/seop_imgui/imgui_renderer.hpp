@@ -22,7 +22,7 @@ class Imgui_renderer
     void               show_particle_properties(Context& ctx);
     void               show_camera_properties(Context& ctx);
     void               show_device_data(Context& ctx);
-    void               show_scene_force(Context& ctx);
+    void               show_scene_data(Context& ctx);
 
     [[nodiscard]] auto hovering_ui() -> bool;
 

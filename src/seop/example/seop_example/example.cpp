@@ -43,8 +43,8 @@ class Example
             tick();
             end_frame();
         }
-        device_.shut_down();
         imgui_core_.shut_down();
+        glfwTerminate();
     }
 
     void tick()
@@ -65,7 +65,7 @@ class Example
 
         float        inv_frame_rate = device_.data().inv_frame_rate;
         const double dt = 1.0 * inv_frame_rate;
-       ctx_.f_dt = static_cast<float>(dt);
+        ctx_.f_dt = static_cast<float>(dt);
 
         // update
         update();

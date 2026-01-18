@@ -50,10 +50,16 @@ class Attractor_data
     size_t attractor_count{0};
 };
 
-class Scene_electronical_properites
+class Scene_electronic_properites
 {
   public:
     float I{0.0f};
+};
+
+class Scene_magnetic_properites
+{
+  public:
+    float      I{0.0f};
 };
 
 class Scene_entities
@@ -68,16 +74,16 @@ class Scene_context
   public:
 };
 
-
 class Scene_data
 
 {
   public:
-    Scene_force                   forces;
-    Scene_entities                entities;
-    Particle_propetires                 particle_properties;
-    Attractor_data                attractor_properties;
-    Scene_electronical_properites electronical_properites;
+    Scene_force                 forces;
+    Scene_entities              entities;
+    Particle_propetires         particle_properties;
+    Attractor_data              attractor_properties;
+    Scene_electronic_properites electronic_properites;
+    Scene_magnetic_properites   magnetic_properites;
 };
 
 class Scene

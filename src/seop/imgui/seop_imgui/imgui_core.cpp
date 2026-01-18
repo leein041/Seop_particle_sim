@@ -11,22 +11,25 @@
 
 namespace seop::imgui
 {
-Imgui_core::Imgui_core() noexcept : renderer_(std::make_unique<Imgui_renderer>())
+Imgui_core::Imgui_core() noexcept
 {
 }
 
 void Imgui_core::init(Context& ctx)
 {
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
     // 백엔드 연결
     ImGui_ImplGlfw_InitForOpenGL(ctx.window->glfw_window(), true);
     ImGui_ImplOpenGL3_Init("#version 130");
+
+    ImGui::StyleColorsDark();
+
+    dockspace_.init();
 }
 
 void Imgui_core::update()
 {
-    state_.is_ui_hovered = renderer_->hovering_ui();
+    state_.is_ui_hovered = renderer_.hovering_ui();
 }
 
 void Imgui_core::render(Context& ctx)
@@ -35,14 +38,16 @@ void Imgui_core::render(Context& ctx)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    renderer_->begin();
-    renderer_->show_frame_rate(ctx);
-    renderer_->show_particle_properties(ctx);
-    renderer_->show_camera_properties(ctx);
-    renderer_->show_device_data(ctx);
-    renderer_->show_scene_force(ctx);
-    renderer_->end();
+    dockspace_.begin();
 
+    renderer_.show_frame_rate(ctx);
+    renderer_.show_particle_properties(ctx);
+    renderer_.show_camera_properties(ctx);
+    renderer_.show_device_data(ctx);
+    renderer_.show_scene_data(ctx);
+
+    dockspace_.end();
+    
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -57,6 +62,11 @@ void Imgui_core::shut_down()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+
+    // 이 한 줄이 "백엔드나 앱이 DestroyPlatformWindows 호출을 잊었나?" 에러를 방지합니다.
+    if (ImGui::GetCurrentContext() != nullptr) {
+        ImGui::DestroyPlatformWindows();
+    }
     ImGui::DestroyContext();
 }
 

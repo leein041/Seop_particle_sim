@@ -3,6 +3,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 
 add_subdirectory(math)
+add_subdirectory(primitive)
+add_subdirectory(item)
 add_subdirectory(window)
 add_subdirectory(command)
 add_subdirectory(message)

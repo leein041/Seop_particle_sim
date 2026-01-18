@@ -1,5 +1,7 @@
 #pragma once
+#include "imgui_dockspace.hpp"
 #include "imgui_renderer.hpp"
+
 #include <memory>
 
 namespace seop
@@ -22,7 +24,6 @@ class Imgui_core
     Imgui_core() noexcept;
     ~Imgui_core() = default;
 
-
     void               init(Context& ctx);
     void               update();
     void               render(Context& ctx);
@@ -32,7 +33,8 @@ class Imgui_core
     [[nodiscard]] auto state() const -> const Imgui_state&;
 
   private:
-    std::unique_ptr<Imgui_renderer> renderer_;
+    Imgui_renderer renderer_;
+    Dockspace      dockspace_;
     Imgui_state    state_;
 };
 

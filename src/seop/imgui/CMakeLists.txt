@@ -6,7 +6,10 @@ target_sources(${_target} PRIVATE
     seop_imgui/imgui_renderer.cpp 
     seop_imgui/imgui_renderer.hpp
     seop_imgui/imgui_core.cpp
-    seop_imgui/imgui_core.hpp
+    seop_imgui/imgui_core.hpp 
+    seop_imgui/imgui_dockspace.hpp
+    seop_imgui/imgui_dockspace.cpp
+
 )
 
 target_link_libraries(${_target}
@@ -17,6 +20,8 @@ target_link_libraries(${_target}
     OpenGL::GL
 
     seop::command
+    seop::item
+    seop::primitive
     seop::math
 
     seop::window

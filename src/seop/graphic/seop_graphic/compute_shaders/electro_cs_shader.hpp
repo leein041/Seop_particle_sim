@@ -59,10 +59,10 @@ const char* electromagnetic_cs_source = // B = I / 2πr
             // B. 전류 가정 ( +y 방향 )
             // B. B = μ₀/4π ∫I*r̂/r² dl ( bio-savar )
             // 무한히 긴 도선인 경우 B = ̂φ * μ₀I/2πr (μ₀ = 4π x 10e-7) = 12.5663 x 10e-7
-            float B_scale = 1000.0;
+            float B_scale = 10000.0;
             vec3 B = vec3(0.0);
             vec3 I_dir = vec3(0.0,1.0,0.0);
-            vec3 r = vec3(pos.x,0.0,pos.z);
+            vec3 r = vec3(pos.x + 500,0.0,pos.z);
             float r_dis = max(5.0, length(r));
             vec3 r_dir = normalize(r);
             vec3 B_dir = cross(I_dir,r_dir);

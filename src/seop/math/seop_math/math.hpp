@@ -1,5 +1,9 @@
 #pragma once
+/*
+ ̂
 
+
+*/
 namespace seop::math
 {
 static constexpr float π = 3.14159265f;
@@ -92,6 +96,7 @@ class Vec4
     float             w_{0.0f};
 
     auto              xyz() const noexcept -> Vec3;
+    auto              xy() const noexcept -> Vec3;
 
     auto              Dot(const Vec4& v) const noexcept -> float;
     auto              LengthSquared() const noexcept -> float;

@@ -1,5 +1,6 @@
 #pragma once
-#include "vertex.hpp"
+#include "seop_item/item.hpp"
+#include "seop_primitive/vertex.hpp"
 
 #include "seop_context/context.hpp"
 #include "seop_entity/particle.hpp"
@@ -26,7 +27,8 @@ enum Compute_type : uint32_t {
     None = 0,
     Gravity = 1 << 1,
     Electromagnetic = 1 << 2,
-    End = 1 << 3,
+    Magnetic = 1 << 3,
+    End = 1 << 4,
 };
 
 class Device_data
@@ -36,7 +38,7 @@ class Device_data
     float        frame_rate{60.0f};
     float        inv_frame_rate{1 / 60.0f};
     math::Vec4   back_col = {0.0f, 0.0f, 0.0f, 1.0f};
-    Compute_type compute_type{Compute_type::Electromagnetic};
+    Compute_type compute_type{Compute_type::Magnetic};
 };
 
 // new
@@ -49,10 +51,12 @@ enum class Shader_task_type {
     Render_particle,
     Render_screen_quad,
     Render_grid,
+    Render_wire, // test
     End,
 };
 enum class Shader_buffer_type {
     Particle,
+    Conductor_wire,
     End,
 };
 enum class Frame_buffer_type {
@@ -63,34 +67,25 @@ constexpr size_t FRAME_BUFFER_MAX = static_cast<size_t>(Frame_buffer_type::End);
 constexpr size_t SHADER_TASK_MAX = static_cast<size_t>(Shader_task_type::End);
 constexpr size_t SHADER_BUFFER_MAX = static_cast<size_t>(Shader_buffer_type::End);
 
-template <typename T>
-class Quad
-{
-  public:
-    std::vector<T> vertices;
-    GLuint         vb;
-    GLuint         va;
-};
-
 class Shader_task
 {
   public:
-    GLuint         program{0};
+    uint32_t       program_id{0};
     Uniform_setter uniform_setter;
 };
 
 class Shader_buffer
 {
   public:
-    GLuint sb;
+    uint32_t id;
 };
 
 class Frame_buffer
 {
   public:
-    bool   use_tex{false};
-    GLuint buffer;
-    GLuint texture;
+    bool     use_tex{false};
+    uint32_t buf_id;
+    uint32_t tex_id;
 };
 
 class Device final
@@ -121,7 +116,8 @@ class Device final
     void draw_particle(size_t cnt);
 
     void init_draw_propeties();
-    void update_shader_buffer(GLuint buffer_id, GLuint binding_point, GLsizeiptr buffer_size, const void* data);
+    void update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data);
+    void update_vertex_buffer(uint32_t buffer_id, GLsizeiptr buffer_size, const void* data);
 
     [[nodiscard]] auto data() const -> const Device_data&;
     [[nodiscard]] auto data() -> Device_data&;
@@ -129,30 +125,35 @@ class Device final
     void               set_frame_rate(float rate);
     void               set_back_col(const math::Vec4& col);
     void               set_compute_type(Compute_type type);
-    
+
+    // temp
+    item::Square_wire         test_square_wire_;
+    void               create_square_wire();
+
   private:
-    void   add_shader_buffer(Shader_buffer_type type);
-    void   add_compute_task(Shader_task_type type, const char* cs_src,
-                            std::function<void(GLuint, Context&)> uniform_setter);
-    void   add_render_task(Shader_task_type type, const char* vs_src, const char* fs_src,
-                           std::function<void(GLuint, Context&)> uniform_setter);
-    void   add_frame_buffer(Frame_buffer_type type, int width, int height);
+    void     add_shader_buffer(Shader_buffer_type type);
+    void     add_compute_task(Shader_task_type type, const char* cs_src,
+                              std::function<void(uint32_t, Context&)> uniform_setter);
+    void     add_render_task(Shader_task_type type, const char* vs_src, const char* fs_src,
+                             std::function<void(uint32_t, Context&)> uniform_setter);
+    void     add_frame_buffer(Frame_buffer_type type, int width, int height);
 
-    void   create_screen_qaud();
-    void   create_grid();
-    GLuint create_cs(const char* src);
-    GLuint create_vs(const char* src);
-    GLuint create_fs(const char* src);
+    void     create_screen_qaud();
+    void     create_grid();
+    uint32_t create_cs(const char* src);
+    uint32_t create_vs(const char* src);
+    uint32_t create_fs(const char* src);
 
-    GLuint particle_layer_buffer;
-    GLuint particle_layer_tex;
+    uint32_t particle_layer_buffer;
+    uint32_t particle_layer_tex;
 
   private:
     Device_data                                  data_;
     std::array<Shader_buffer, SHADER_BUFFER_MAX> shader_buffers_;
     std::array<Shader_task, SHADER_TASK_MAX>     shader_tasks_;
     std::array<Frame_buffer, FRAME_BUFFER_MAX>   frame_buffers_;
-    Quad<Vertex_pu>                              screen_quad_;
-    Quad<Vertex_pc>                              grid_quad_;
+
+    item::Render_item<primitive::Vertex_pu>      screen_quad_;
+    item::Render_item<primitive::Vertex_pc>      grid_quad_;
 };
 } // namespace seop::graphic
