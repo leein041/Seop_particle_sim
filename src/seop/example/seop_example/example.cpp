@@ -74,7 +74,7 @@ class Example
         while (m_time_accumulator >= dt) {
             device_.compute(ctx_);
             m_time_accumulator -= dt;
-            m_time += dt;
+            ctx_.time += dt;
         }
         // render
         device_.render(ctx_);
@@ -151,7 +151,6 @@ class Example
 
     std::chrono::steady_clock::time_point m_current_time;
     double                                m_time_accumulator{0.0};
-    double                                m_time{0.0};
 };
 
 void example_run()

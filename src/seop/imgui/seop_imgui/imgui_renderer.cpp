@@ -56,24 +56,7 @@ void Imgui_renderer::show_scene_data(Context& ctx)
         ImGui::SliderFloat("Magnetic Strength", &data.forces.magentic_str, MIN_MAGNETIC_STRENGTH, MAX_MAGNETIC_STRENGTH,
                            "%.3f");
     } else if (ctx.device->data().compute_type == graphic::Compute_type::Magnetic) {
-        if ((ImGui::SliderFloat2("Square Scale", &ctx.device->test_square_wire_.scale.x_, 0.5f, 5.0f, "%.1f"))) {
-            float sw = ctx.device->test_square_wire_.scale.x_;
-            float sh = ctx.device->test_square_wire_.scale.y_;
-
-            auto& verts = ctx.device->test_square_wire_.vb.vertices;
-            verts[0].pos = math::Vec4{100 * sw, 100 * sh, 0.0f, 1.0f};
-            verts[1].pos = math::Vec4{-100 * sw, 100 * sh, 0.0f, 1.0f};
-            verts[2].pos = math::Vec4{-100 * sw, 100 * sh, 0.0f, 1.0f};
-            verts[3].pos = math::Vec4{(-100) * sw, -100 * sh, 0.0f, 1.0f};
-            verts[4].pos = math::Vec4{(-100) * sw, (-100) * sh, 0.0f, 1.0f};
-            verts[5].pos = math::Vec4{100 * sw, (-100) * sh, 0.0f, 1.0f};
-            verts[6].pos = math::Vec4{100 * sw, -100 * sh, 0.0f, 1.0f};
-            verts[7].pos = math::Vec4{100 * sw, 100 * sh, 0.0f, 1.0f};
-            ctx.device->update_shader_buffer(ctx.device->test_square_wire_.vb.id, 1,
-                                             ctx.device->test_square_wire_.vb.vertices.size() *
-                                                 sizeof(primitive::Vertex_p),
-                                             ctx.device->test_square_wire_.vb.vertices.data());
-        }
+    
     }
 
     ImGui::End();

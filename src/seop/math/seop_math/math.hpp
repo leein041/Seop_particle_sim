@@ -139,7 +139,7 @@ class Matrix
     void          Transpose() noexcept;
     auto          Transposed() const noexcept -> Matrix;
     void          Inverse() noexcept;
-    auto          Inversed() const noexcept -> Matrix;
+    auto          Invert() const noexcept -> Matrix;
 
     auto          Determinant() const -> float;
     float _00{0.0f}, _01{0.0f}, _02{0.0f}, _03{0.0f}, _10{0.0f}, _11{0.0f}, _12{0.0f}, _13{0.0f}, _20{0.0f}, _21{0.0f},

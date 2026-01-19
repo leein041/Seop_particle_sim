@@ -128,7 +128,7 @@ void Input::update_key_up(Key& key)
     if (key.pressed == true) {
         key.state = Key_state::Up; // 키를 누르지 않음
     } else {
-        key.state = Key_state::None; // 키를 안눌렀음
+        key.state = Key_state::Released; // 키를 안눌렀음
     }
     key.pressed = false;
 }
@@ -138,7 +138,7 @@ void Input::create_key()
     for (int vk = 0x00; vk <= 0xFF; vk++) {
         Key key = {};
         key.pressed = false;
-        key.state = Key_state::None;
+        key.state = Key_state::Released;
         key.key_code = static_cast<Key_code>(vk);
         key.vk_key_code = vk;
 
@@ -152,7 +152,7 @@ void Input::clear_key()
         if (key.state == Key_state::Down || key.state == Key_state::Pressed) {
             key.state = Key_state::Up;
         } else if (key.state == Key_state::Up) {
-            key.state = Key_state::None;
+            key.state = Key_state::Released;
         }
         key.pressed = false;
     }

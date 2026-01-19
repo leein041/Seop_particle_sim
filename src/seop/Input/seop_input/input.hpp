@@ -11,7 +11,7 @@ namespace seop::input {
 class Key {
   public:
     Key_code  key_code{Key_code::End};
-    Key_state state{Key_state::None};
+    Key_state state{Key_state::Released};
     bool      pressed{false};
     int       vk_key_code{0};
 };

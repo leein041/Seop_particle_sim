@@ -24,9 +24,9 @@ namespace seop::window
 
         [[nodiscard]] auto glfw_window() const -> GLFWwindow *;
         [[nodiscard]] auto glfw_window() -> GLFWwindow *;
-        [[nodiscard]] auto window_size() const -> const math::Vec2 &;
-        [[nodiscard]] auto inv_window_size() const -> const math::Vec2 &;
-        [[nodiscard]] auto half_window_size() const -> const math::Vec2 &;
+        [[nodiscard]] auto client_size() const -> const math::Vec2 &;
+        [[nodiscard]] auto inv_client_size() const -> const math::Vec2 &;
+        [[nodiscard]] auto half_client_size() const -> const math::Vec2 &;
 
         void set_window_size(const math::Vec2 &size);
 
@@ -35,9 +35,9 @@ namespace seop::window
     private:
         GLFWwindow *window_{nullptr};
 
-        math::Vec2 window_size_{1600.f, 900.f};
-        math::Vec2 half_window_size_{window_size_ / 2};
-        math::Vec2 inv_window_size_{1 / window_size_.x_, 1 / window_size_.y_};
+        math::Vec2 client_size_{1600.f, 900.f};
+        math::Vec2 half_client_size_{client_size_ / 2};
+        math::Vec2 inv_client_size_{1 / client_size_.x_, 1 / client_size_.y_};
 
     };
 

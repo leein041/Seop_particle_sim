@@ -27,6 +27,7 @@ class Context
     scene::Scene*          scene{nullptr};
     input::Input*          input{nullptr};
 
-    float f_dt;
+    float f_dt{0.0f};
+    double time{0.0f};
 };
 } // namespace seop

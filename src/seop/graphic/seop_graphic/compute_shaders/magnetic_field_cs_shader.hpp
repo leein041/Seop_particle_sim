@@ -10,22 +10,28 @@ struct Particle
     vec4 col;
     vec4 vel;
 };
+struct Conductor_vertex
+{
+    vec4 pos;
+    vec4 col;
+    float size;
+    float pad[3];
+};
 layout(std430, binding = 0) buffer ParticleBuffer
 {
     Particle particles[];
 };
 layout(std430, binding = 1) buffer ConductorBuffer // 새로운 바인딩 1번
 {
-    vec4 conductor_vertices[]; // 점의 개수가 유동적일 수 있으므로 배열로 선언
+    Conductor_vertex conductor_vertices[]; // 점의 개수가 유동적일 수 있으므로 배열로 선언
 };
 
-uniform uint u_conductor_count;
+uniform uint u_wire_count;
 uniform uint u_particle_count;
 
 uniform float u_dt;
 uniform float u_time_scale;
 uniform float u_particle_col; 
-uniform vec2 u_square_scale; 
 
 void main()
 {
@@ -38,10 +44,10 @@ void main()
     // B. B = μ₀/4π ∫l̂*r̂/r² dl ( bio-savar )
 
     vec3 B = vec3(0.0);
-    for(int j = 0; j<u_conductor_count; j++){
+    for(int j = 0; j<u_wire_count; j++){
         float I = 10000000.0; 
-        vec3 A = conductor_vertices[j * 2].xyz;
-        vec3 B_p = conductor_vertices[j * 2 + 1].xyz;
+        vec3 A = conductor_vertices[j * 2].pos.xyz;
+        vec3 B_p = conductor_vertices[j * 2 + 1].pos.xyz;
         vec3 L = B_p - A;
         vec3 AP = pos - A;
         vec3 BP = pos - B_p;

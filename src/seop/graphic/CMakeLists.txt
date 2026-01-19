@@ -19,6 +19,7 @@ target_link_libraries(${_target}
     seop::math
     seop::primitive
     seop::item
+    seop::raytrace
     seop::entity
     seop::context
     seop::msg

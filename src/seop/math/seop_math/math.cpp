@@ -331,9 +331,9 @@ namespace seop::math
     }
     void Matrix::Inverse() noexcept
     {
-        *this = Inversed();
+        *this = Invert();
     }
-    auto Matrix::Inversed() const noexcept -> Matrix
+    auto Matrix::Invert() const noexcept -> Matrix
     {
         float det = Determinant();
         if (std::abs(det) < 1e-6f)

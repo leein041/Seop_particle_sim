@@ -51,7 +51,7 @@ enum class Key_state
     Down,
     Pressed,
     Up,
-    None,
+    Released,
 };
 enum class Key_code : int
 {

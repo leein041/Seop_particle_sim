@@ -21,6 +21,11 @@ namespace seop::msg
 class Message;
 }
 
+namespace seop::primive
+{
+class Vertex_pcs;
+}
+
 namespace seop::graphic
 {
 enum Compute_type : uint32_t {
@@ -87,6 +92,8 @@ class Frame_buffer
     uint32_t buf_id;
     uint32_t tex_id;
 };
+// temp
+enum class Edit_mode { Plane_xy, Plane_yz, Plane_zx, End };
 
 class Device final
 {
@@ -119,16 +126,23 @@ class Device final
     void update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data);
     void update_vertex_buffer(uint32_t buffer_id, GLsizeiptr buffer_size, const void* data);
 
-    [[nodiscard]] auto data() const -> const Device_data&;
-    [[nodiscard]] auto data() -> Device_data&;
-    void               set_fade_scale(float scale);
-    void               set_frame_rate(float rate);
-    void               set_back_col(const math::Vec4& col);
-    void               set_compute_type(Compute_type type);
+    [[nodiscard]] auto                  data() const -> const Device_data&;
+    [[nodiscard]] auto                  data() -> Device_data&;
+    void                                set_fade_scale(float scale);
+    void                                set_frame_rate(float rate);
+    void                                set_back_col(const math::Vec4& col);
+    void                                set_compute_type(Compute_type type);
 
     // temp
-    item::Square_wire         test_square_wire_;
-    void               create_square_wire();
+    Edit_mode                           edit_mode_{Edit_mode::Plane_xy};
+    primitive::Vertex_pcs*              hover_vertex{nullptr};
+    std::vector<primitive::Vertex_pcs*> hold_vertex;
+    primitive::Vertex_pcs*              hover_wire[2]{nullptr, nullptr};
+    primitive::Vertex_pcs*              hold_wire[2]{nullptr, nullptr};
+    item::Wire                          test_wires_;
+    void                                create_wire();
+    void                                add_wire();
+    void                                raytrace(Context& ctx);
 
   private:
     void     add_shader_buffer(Shader_buffer_type type);

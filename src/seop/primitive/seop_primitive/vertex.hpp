@@ -19,6 +19,16 @@ class Vertex_pc
     math::Vec4 col{math::Vec4::Zero};
 };
 
+class Vertex_pcs
+{
+  public:
+    math::Vec4 pos{math::Vec4::Zero};
+    math::Vec4 col{math::Vec4::Zero};
+    float      size{1.0f};
+    float      coord{0.0f};
+    float      pad[2];
+};
+
 class Vertex_pu
 {
   public:
@@ -40,4 +50,4 @@ class Vertex_array // = input layout
   public:
     uint32_t id;
 };
-} // namespace seop::graphic
+} // namespace seop::primitive

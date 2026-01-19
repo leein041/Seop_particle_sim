@@ -171,8 +171,8 @@ void Scene::update_camera(Context& ctx)
     if (ctx.input->get_key_down(input::Key_code::LButton)) {
         Vec2   pos_ndc = ctx.window->get_cursor_pos_ndc();
         Vec4   clip_space(pos_ndc.x_, pos_ndc.y_, -1.0f, 1.0f);
-        Matrix projection_matirx_inv = camera_.data().projection.Inversed();
-        Matrix view_matirx_inv = camera_.data().view.Inversed();
+        Matrix projection_matirx_inv = camera_.data().projection.Invert();
+        Matrix view_matirx_inv = camera_.data().view.Invert();
 
         Vec4   view_space = projection_matirx_inv * clip_space;
         view_space.z_ = -1.0f;
