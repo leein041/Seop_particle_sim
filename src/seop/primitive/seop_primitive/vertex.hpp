@@ -19,6 +19,8 @@ class Vertex_pc
     math::Vec4 col{math::Vec4::Zero};
 };
 
+static uint32_t vert_id = 0;
+
 class Vertex_pcs
 {
   public:
@@ -26,7 +28,9 @@ class Vertex_pcs
     math::Vec4 col{math::Vec4::Zero};
     float      size{1.0f};
     float      coord{0.0f};
-    float      pad[2];
+    uint32_t   id{0};
+    uint16_t   state{0};
+    uint16_t   pad;
 };
 
 class Vertex_pu

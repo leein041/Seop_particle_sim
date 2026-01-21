@@ -18,6 +18,7 @@ class Imgui_renderer
     void               begin();
     void               end();
 
+    void               show_manual();
     void               show_frame_rate(Context& ctx);
     void               show_particle_properties(Context& ctx);
     void               show_camera_properties(Context& ctx);

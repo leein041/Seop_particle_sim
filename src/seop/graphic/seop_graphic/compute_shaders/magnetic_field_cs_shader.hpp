@@ -49,6 +49,8 @@ void main()
         vec3 A = conductor_vertices[j * 2].pos.xyz;
         vec3 B_p = conductor_vertices[j * 2 + 1].pos.xyz;
         vec3 L = B_p - A;
+        if (length(L) < 2.0) continue;   
+        
         vec3 AP = pos - A;
         vec3 BP = pos - B_p;
         float t = dot(AP, L) / dot(L, L);

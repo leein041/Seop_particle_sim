@@ -40,6 +40,7 @@ void Imgui_core::render(Context& ctx)
 
     dockspace_.begin();
 
+    renderer_.show_manual();
     renderer_.show_frame_rate(ctx);
     renderer_.show_particle_properties(ctx);
     renderer_.show_camera_properties(ctx);
@@ -47,9 +48,18 @@ void Imgui_core::render(Context& ctx)
     renderer_.show_scene_data(ctx);
 
     dockspace_.end();
-    
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    // (릴리즈 크래시 해결 핵심)
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context); // 메인 컨텍스트 복구
+    }
 }
 
 void Imgui_core::end_frame()

@@ -17,6 +17,10 @@ void Dockspace::init()
 void Dockspace::begin()
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    
+    // 안전장치: 뷰포트가 유효하지 않으면 중단
+    if (!viewport) return;
+
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);

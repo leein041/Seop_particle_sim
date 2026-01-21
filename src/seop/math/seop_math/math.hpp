@@ -1,4 +1,5 @@
 #pragma once
+
 /*
  ̂
 
@@ -56,6 +57,7 @@ class Vec3
 
     auto              operator-=(const Vec3& v) noexcept -> Vec3&;
     auto              operator+=(const Vec3& v) noexcept -> Vec3&;
+    auto              operator==(const Vec3& v) noexcept -> bool;
     auto              operator=(const Vec3& v) noexcept -> Vec3& = default;
     auto              operator+(const Vec3& v) const noexcept -> Vec3;
     auto              operator-(const Vec3& v) const noexcept -> Vec3;
@@ -85,6 +87,7 @@ class Vec4
     }
 
     auto              operator=(const Vec4& v) noexcept -> Vec4& = default;
+    auto              operator+=(const Vec4& v) noexcept -> Vec4&;
     auto              operator+(const Vec4& v) const noexcept -> Vec4;
     auto              operator-(const Vec4& v) const noexcept -> Vec4;
     auto              operator*(float f) const noexcept -> Vec4;
@@ -166,4 +169,17 @@ inline constexpr Matrix Matrix::Zero = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 
 
 inline constexpr Matrix Matrix::Identity = {1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
                                             0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f};
+
+struct Closest_points
+{
+    Vec3 src_point{Vec3::Zero};
+    Vec3 dst_point{Vec3::Zero};
+};
+
+auto closest_dist_point_to_ray(const Vec3& vert, const Vec3& ori, const Vec3& dir) -> float;
+
+auto dist_line_to_line(const Vec3& src_ori, const Vec3& src_dir, const Vec3& dst_ori, const Vec3& dst_dir) -> float;
+auto closest_points_to_line(const Vec3& src_ori, const Vec3& src_dir, const Vec3& dst_ori, const Vec3& dst_dir)
+    -> Closest_points;
+
 } // namespace seop::math

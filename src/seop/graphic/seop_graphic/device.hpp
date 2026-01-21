@@ -26,6 +26,11 @@ namespace seop::primive
 class Vertex_pcs;
 }
 
+namespace seop::raytrace
+{
+class Ray;
+}
+
 namespace seop::graphic
 {
 enum Compute_type : uint32_t {
@@ -126,24 +131,41 @@ class Device final
     void update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data);
     void update_vertex_buffer(uint32_t buffer_id, GLsizeiptr buffer_size, const void* data);
 
-    [[nodiscard]] auto                  data() const -> const Device_data&;
-    [[nodiscard]] auto                  data() -> Device_data&;
-    void                                set_fade_scale(float scale);
-    void                                set_frame_rate(float rate);
-    void                                set_back_col(const math::Vec4& col);
-    void                                set_compute_type(Compute_type type);
+    [[nodiscard]] auto data() const -> const Device_data&;
+    [[nodiscard]] auto data() -> Device_data&;
+    void               set_fade_scale(float scale);
+    void               set_frame_rate(float rate);
+    void               set_back_col(const math::Vec4& col);
+    void               set_compute_type(Compute_type type);
 
+    // TODO : temp region need refactoring
     // temp
-    Edit_mode                           edit_mode_{Edit_mode::Plane_xy};
-    primitive::Vertex_pcs*              hover_vertex{nullptr};
-    std::vector<primitive::Vertex_pcs*> hold_vertex;
-    primitive::Vertex_pcs*              hover_wire[2]{nullptr, nullptr};
-    primitive::Vertex_pcs*              hold_wire[2]{nullptr, nullptr};
-    item::Wire                          test_wires_;
-    void                                create_wire();
-    void                                add_wire();
-    void                                raytrace(Context& ctx);
+    enum Vertex_state : uint16_t {
+        STATE_NONE = 0,
+        STATE_HOVER_ONLY = 1 << 1,
+        STATE_HOVER_WIRE = 1 << 2,
+        STATE_SELECTED = 1 << 3,
+        STATE_HOLD = 1 << 4,
+        STATE_INACTIVE = 1 << 5,
+        STATE_DESTROYED = 1 << 6,
+    };
 
+    float                snap_interval{50.0f};
+    math::Closest_points closest_points_to_line;
+    Edit_mode            edit_mode_{Edit_mode::Plane_xy};
+
+    math::Vec3           pre_snapped_pos{math::Vec3::Zero};
+    math::Vec3           cur_intersection{math::Vec3::Zero};
+    item::Wire           test_wires_;
+
+    void                 create_wire();
+    void                 add_wire();
+    auto                 make_ray(const math::Vec2& ndc_pos, const math::Vec3& cam_pos, const math::Matrix& view,
+                                  const math::Matrix& projection) -> raytrace::Ray;
+    void                 raytrace(Context& ctx);
+    auto get_snap_pos(float interval, const math::Vec3& ray_ori, const math::Vec3& ray_dir, const math::Vec3& vert_pos,
+                      Edit_mode mode) -> math::Vec3;
+    // temp end
   private:
     void     add_shader_buffer(Shader_buffer_type type);
     void     add_compute_task(Shader_task_type type, const char* cs_src,
