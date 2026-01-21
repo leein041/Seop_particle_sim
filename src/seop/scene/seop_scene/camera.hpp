@@ -27,8 +27,8 @@ class Camera_frustum
 
 {
   public:
-    float fov{0.785f};             // 약 45도
-    float aspect{1600.f / 900.0f}; //
+    float fov{0.785f};       // 약 45도
+    float aspect{1.777778f}; //
     float near{0.1f};
     float far{10000.0f};
 };
@@ -58,19 +58,20 @@ class Camera
     void               init();
     void               update();
     void               reset_state();
+    void               make_view();
+    void               make_projection();
+
     [[nodiscard]] auto data() const -> const Camera_data&;
     [[nodiscard]] auto data() -> Camera_data&;
     [[nodiscard]] auto camera_state() const -> const Camera_state&;
     [[nodiscard]] auto camera_state() -> Camera_state&;
     void               set_transform(const Camera_trasform& tr);
+    void               set_aspect(float aspect);
 
     // temp
     void               update_transform();
 
   private:
-    void make_view();
-    void make_projection();
-
   private:
     Camera_data  data_;
     Camera_state camera_state_;

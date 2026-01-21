@@ -5,6 +5,8 @@ add_library(seop::window ALIAS ${_target})
 target_sources(${_target} PRIVATE
     seop_window/glf_window.cpp
     seop_window/glf_window.hpp
+    seop_window/window_message.hpp
+    seop_window/window_message.cpp
 )
 
 target_link_libraries(${_target}
@@ -14,6 +16,7 @@ target_link_libraries(${_target}
     OpenGL::GL
 
     seop::math
+    seop::msg
 )
 
 target_include_directories(${_target} PUBLIC

@@ -423,5 +423,4 @@ auto closest_points_to_line(const Vec3& src_ori, const Vec3& src_dir, const Vec3
     return points;
 }
 
-
 } // namespace seop::math

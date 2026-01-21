@@ -108,7 +108,6 @@ class Example
         input_.init();
 
         reset();
-
         register_command();
     }
 

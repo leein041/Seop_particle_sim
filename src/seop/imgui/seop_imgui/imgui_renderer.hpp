@@ -18,6 +18,7 @@ class Imgui_renderer
     void               begin();
     void               end();
 
+    void               show_menu_bar(Context& ctx);
     void               show_manual();
     void               show_frame_rate(Context& ctx);
     void               show_particle_properties(Context& ctx);
@@ -40,6 +41,13 @@ inline constexpr float MIN_MAGNETIC_STRENGTH = 0.0f;
 inline constexpr float MAX_MAGNETIC_STRENGTH = 100.0f;
 inline constexpr float MIN_CURRENT_INTENSITY = -1000.0f;
 inline constexpr float MAX_CURRENT_INTENSITY = 1000.0f;
+
 inline constexpr float MIN_CAMERA_SPEED = 100.0f;
 inline constexpr float MAX_CAMERA_SPEED = 3000.0f;
+inline constexpr float MIN_CAMERA_FOV = 0.1f;
+inline constexpr float MAX_CAMERA_FOV = 2.0f;
+inline constexpr float MIN_CAMERA_NEAR = 1.0f;
+inline constexpr float MAX_CAMERA_NEAR = 200.0f;
+inline constexpr float MIN_CAMERA_FAR = 200.f;
+inline constexpr float MAX_CAMERA_FAR = 20000.f;
 } // namespace seop::imgui

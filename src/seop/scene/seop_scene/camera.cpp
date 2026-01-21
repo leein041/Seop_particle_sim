@@ -36,7 +36,7 @@ void Camera::make_view()
 
 void Camera::make_projection()
 {
-    data_.projection = math::Matrix::CreatePerspective(2 * math::π / 6.0f, data_.frustum.aspect, data_.frustum.near,
+    data_.projection = math::Matrix::CreatePerspective(data_.frustum.fov, data_.frustum.aspect, data_.frustum.near,
                                                        data_.frustum.far);
 }
 
@@ -49,6 +49,7 @@ auto Camera::data() -> Camera_data&
 {
     return data_;
 }
+
 auto Camera::camera_state() const -> const Camera_state&
 {
     return camera_state_;
@@ -62,6 +63,11 @@ auto Camera::camera_state() -> Camera_state&
 void Camera::set_transform(const Camera_trasform& tr)
 {
     data_.transform = tr;
+}
+
+void Camera::set_aspect(float aspect)
+{
+    data_.frustum.aspect = aspect;
 }
 
 void Camera::update_transform()

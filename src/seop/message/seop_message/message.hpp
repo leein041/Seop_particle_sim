@@ -51,11 +51,16 @@ class Message_queue
         msg_handlers_[typeid(T)].push_back([handler](Message& msg) -> bool { return handler(static_cast<T&>(msg)); });
     }
 
-    void Push_messag(Message* msg);
+    template <typename T, typename... Args>
+    void Push_message(Args&&... args)
+    {
+        msg_que_.push(new T(std::forward<Args>(args)...));
+    }
+
     void Process();
 
   private:
-    std::queue<Message*>                                  msg_que_ = {};
+    std::queue<Message*>                                  msg_que_;
     std::unordered_map<std::type_index, Msg_handler_list> msg_handlers_;
 };
 } // namespace seop::msg

@@ -7,6 +7,8 @@
 #include "seop_scene/scene.hpp"
 #include "seop_scene/scene_command.hpp"
 #include "seop_scene/scene_message.hpp"
+#include "seop_window/glf_window.hpp"
+#include "seop_window/window_message.hpp"
 
 #include <imgui/imgui.h>
 
@@ -20,8 +22,43 @@ Imgui_renderer::Imgui_renderer() noexcept
 {
 }
 
+void Imgui_renderer::show_menu_bar(Context& ctx)
+{
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Window")) {
+            if (ImGui::BeginMenu("Resolution")) {
+                // 해상도 프리셋 정의
+                struct Res
+                {
+                    const char* name;
+                    float       w;
+                    float       h;
+                };
+
+                Res presets[] = {{"1280 x 720", 1280.f, 720.f},
+                                 {"1600 x 900", 1600.f, 900.f},
+                                 {"1920 x 1080", 1920.f, 1080.f},
+                                 {"2560 x 1440", 2560.f, 1440.f}};
+
+                for (auto& r : presets) {
+                    if (ImGui::MenuItem(r.name)) {
+                        ctx.window->set_window_size(math::Vec2{r.w, r.h});
+                        ctx.scene->camera().set_aspect(r.w / r.h);
+                        ctx.device->update_frame_buffer(graphic::Frame_buffer_type::Particle_layer,
+                                                        static_cast<int>(r.w), static_cast<int>(r.h));
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+}
+
 void Imgui_renderer::show_manual()
 {
+    ImGui::SetNextWindowBgAlpha(0.25f);
     ImGui::Begin("Manual");
     ImGui::SeparatorText("Shortcut Key");
 
@@ -143,8 +180,8 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
             cmd->execute();
             // FIXED : scene 멤버함수내에서 메세지를 발행해야하는데
             // scene 멤버함수가 ms_queue를 알아야함. 이게 싫다면 어케?
-            ctx.msg_queue->Push_messag(
-                new scene::Particle_change_message(cnt, ctx.scene->data().entities.particles.data()));
+            ctx.msg_queue->Push_message<scene::Particle_change_message>(cnt,
+                                                                        ctx.scene->data().entities.particles.data());
         }
     }
 #endif
@@ -164,8 +201,7 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
 
     if (ImGui::Button("Reset particle", ImVec2(button_width, 0))) {
-        ctx.msg_queue->Push_messag(
-            new scene::Particle_change_message(cnt, ctx.scene->data().entities.particles.data()));
+        ctx.msg_queue->Push_message<scene::Particle_change_message>(cnt, ctx.scene->data().entities.particles.data());
     }
 
     ImGui::PopStyleColor(3);
@@ -185,7 +221,7 @@ void Imgui_renderer::show_camera_properties(Context& ctx)
         return;
     }
 
-    scene::Camera_data& cam = ctx.scene->camera().data();
+    scene::Camera& cam = ctx.scene->camera();
 
     ImGui::TextDisabled("Left Drag rotate + WASD move");
     ImGui::SeparatorText("Transform");
@@ -194,17 +230,17 @@ void Imgui_renderer::show_camera_properties(Context& ctx)
     if (ImGui::BeginTable("##TransformTable", 3)) {
         ImGui::TableNextColumn();
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
-        ImGui::DragFloat("X", &cam.transform.pos.x_, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::DragFloat("X", &cam.data().transform.pos.x_, 0.1f, 0.0f, 0.0f, "%.2f");
         ImGui::PopStyleColor();
 
         ImGui::TableNextColumn();
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
-        ImGui::DragFloat("Y", &cam.transform.pos.y_, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::DragFloat("Y", &cam.data().transform.pos.y_, 0.1f, 0.0f, 0.0f, "%.2f");
         ImGui::PopStyleColor();
 
         ImGui::TableNextColumn();
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 1.0f, 1.0f));
-        ImGui::DragFloat("Z", &cam.transform.pos.z_, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::DragFloat("Z", &cam.data().transform.pos.z_, 0.1f, 0.0f, 0.0f, "%.2f");
         ImGui::PopStyleColor();
 
         ImGui::EndTable();
@@ -212,17 +248,43 @@ void Imgui_renderer::show_camera_properties(Context& ctx)
 
     ImGui::Spacing();
     ImGui::SeparatorText("Movement");
-
-    // 슬라이더도 창 크기에 맞춰 유동적으로 변하게 함
     ImGui::Text("Speed");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-    ImGui::SliderFloat("##CameraSpeed", &cam.transform.speed_scale, MIN_CAMERA_SPEED, MAX_CAMERA_SPEED, "x %.2f");
+    ImGui::SliderFloat("##CameraSpeed", &cam.data().transform.speed_scale, MIN_CAMERA_SPEED, MAX_CAMERA_SPEED,
+                       "x %.2f");
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Frustum");
+
+    ImGui::Text("Field of view");
+    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    if (ImGui::DragFloat("##field_of_view", &cam.data().frustum.fov, 0.005f, MIN_CAMERA_FOV, MAX_CAMERA_FOV, "%.3f")) {
+        cam.make_projection();
+    }
+
+    ImGui::Text("Near");
+    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    if (ImGui::DragFloat("##near", &cam.data().frustum.near, 1.f, MIN_CAMERA_NEAR, MAX_CAMERA_NEAR, "%1.f")) {
+        cam.make_projection();
+    }
+    ImGui::Text("Far");
+    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    if (ImGui::DragFloat("##far", &cam.data().frustum.far, 10.f, MIN_CAMERA_FAR, MAX_CAMERA_FAR, "%1.f")) {
+        cam.make_projection();
+    }
+    float fov{0.785f};       // 약 45도
+    float aspect{1.777778f}; //
+    float near{0.1f};
+    float far{10000.0f};
 
     ImGui::Spacing();
     if (ImGui::Button("Reset View", ImVec2(-FLT_MIN, 0))) { // 가로로 꽉 찬 버튼
-        cam.transform.pos = math::Vec3{0.0f, 0.0f, 500.0f};
-        cam.transform.speed_scale = 1.0f;
+        cam.data().transform.pos = math::Vec3{0.0f, 0.0f, 500.0f};
+        cam.data().transform.speed_scale = 1.0f;
     }
 
     ImGui::End();
@@ -248,15 +310,12 @@ void Imgui_renderer::show_device_data(Context& ctx)
     }
     ImGui::SeparatorText("Fade Effect");
 
-    // 텍스트와 드래그 입력창을 한 줄에 깔끔하게 배치
     ImGui::Text("Fade Speed");
     ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
     ImGui::SetNextItemWidth(-FLT_MIN);
 
-    // 슬라이더 대신 DragFloat 사용: 컨트롤이 더 묵직하고 정밀함
     if (ImGui::DragFloat("##fade_slider", &ctx.device->data().fade_scale, 0.005f, 0.001f, 1.0f, "%.3f",
                          ImGuiSliderFlags_Logarithmic)) {
-        // 필요한 경우 값 제한 보정
     }
 
     ImGui::End();

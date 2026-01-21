@@ -40,6 +40,7 @@ void Imgui_core::render(Context& ctx)
 
     dockspace_.begin();
 
+    renderer_.show_menu_bar(ctx);
     renderer_.show_manual();
     renderer_.show_frame_rate(ctx);
     renderer_.show_particle_properties(ctx);

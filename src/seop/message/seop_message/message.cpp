@@ -2,10 +2,8 @@
 
 namespace seop::msg
 {
-void Message_queue::Push_messag(Message* msg)
-{
-    msg_que_.push(msg);
-}
+    
+
 
 void Message_queue::Process()
 {
@@ -23,3 +21,5 @@ void Message_queue::Process()
     delete(msg);
 }
 } // namespace seop::msg
+
+

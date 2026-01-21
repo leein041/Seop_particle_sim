@@ -128,6 +128,7 @@ class Device final
     void draw_particle(size_t cnt);
 
     void init_draw_propeties();
+    void update_frame_buffer(Frame_buffer_type type, int width, int height);
     void update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data);
     void update_vertex_buffer(uint32_t buffer_id, GLsizeiptr buffer_size, const void* data);
 

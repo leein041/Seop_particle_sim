@@ -225,6 +225,8 @@ void Device::compute(Context& ctx)
 void Device::render(Context& ctx)
 {
     // temp
+    auto size = ctx.window->client_size();
+    glViewport(0, 0, (int)size.x_, (int)size.y_);
     raytrace(ctx);
     // pipeline 1
     glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers_[to_idx(Frame_buffer_type::Particle_layer)].buf_id);
@@ -438,6 +440,9 @@ auto Device::make_ray(const math::Vec2& ndc_pos, const math::Vec3& cam_pos, cons
 void Device::raytrace(Context& ctx)
 {
     // ndc 좌표 변환
+    if (ctx.input->get_key_down(input::Key_code::O)) {
+        int a = 0;
+    }
     Vec2                cursor_ndc = ctx.window->get_cursor_pos_ndc();
     scene::Camera_data& cam_data = ctx.scene->camera().data();
 
@@ -687,6 +692,28 @@ void Device::add_frame_buffer(Frame_buffer_type type, int width, int height)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     frame_buffers_[to_idx(type)] = target;
+}
+
+void Device::update_frame_buffer(Frame_buffer_type type, int width, int height)
+{
+    Frame_buffer& target = frame_buffers_[to_idx(type)];
+
+    glBindTexture(GL_TEXTURE_2D, target.tex_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+#if _DEBUG
+    // 4. FBO 상태 체크 (선택 사항이지만 디버깅에 매우 유리함)
+    glBindFramebuffer(GL_FRAMEBUFFER, target.buf_id);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.tex_id, 0);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "FBO Resize Failed! Status: " << status << std::endl;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 }
 
 void Device::update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data)
