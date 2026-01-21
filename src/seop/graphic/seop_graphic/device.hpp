@@ -37,7 +37,7 @@ enum Compute_type : uint32_t {
     None = 0,
     Gravity = 1 << 1,
     Electromagnetic = 1 << 2,
-    Magnetic = 1 << 3,
+    Time_varying_EM_field = 1 << 3,
     End = 1 << 4,
 };
 
@@ -48,7 +48,7 @@ class Device_data
     float        frame_rate{60.0f};
     float        inv_frame_rate{1 / 60.0f};
     math::Vec4   back_col = {0.0f, 0.0f, 0.0f, 1.0f};
-    Compute_type compute_type{Compute_type::Magnetic};
+    Compute_type compute_type{Compute_type::Time_varying_EM_field};
 };
 
 // new
@@ -56,7 +56,7 @@ using Uniform_setter = std::function<void(Context&)>;
 enum class Shader_task_type {
     Compute_gravity,
     Compute_electromagnetic,
-    Compute_magnetic_field,
+    Compute_static_magnetic_field,
 
     Render_particle,
     Render_screen_quad,

@@ -115,11 +115,21 @@ void Imgui_renderer::show_scene_data(Context& ctx)
     } else if (ctx.device->data().compute_type == graphic::Compute_type::Electromagnetic) {
         ImGui::SliderFloat("Magnetic Strength", &data.forces.magentic_str, MIN_MAGNETIC_STRENGTH, MAX_MAGNETIC_STRENGTH,
                            "%.3f");
-    } else if (ctx.device->data().compute_type == graphic::Compute_type::Magnetic) {
+    } else if (ctx.device->data().compute_type == graphic::Compute_type::Time_varying_EM_field) {
+        ImGui::SeparatorText("Current");
 
-        if (ImGui::Button("Add wire")) {
-            ctx.device->add_wire();
-        }
+        ImGui::Text("Max Current");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
+        ImGui::SliderFloat("##max_current", &data.wire_properites.max_i, -10.0f, 10.0f, "%.1f");
+
+        ImGui::Text("Angle Frequency");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
+        ImGui::SliderFloat("##angle_frequency", &data.wire_properites.w, 1.0f, 100.0f, "%1.f");
+    }
+    if (ImGui::Button("Add wire")) {
+        ctx.device->add_wire();
     }
 
     ImGui::End();
@@ -305,8 +315,8 @@ void Imgui_renderer::show_device_data(Context& ctx)
         ctx.device->set_compute_type(graphic::Compute_type::Electromagnetic);
     }
     ImGui::SameLine();
-    if (ImGui::Button("Magnetic Field")) {
-        ctx.device->set_compute_type(graphic::Compute_type::Magnetic);
+    if (ImGui::Button("Time Varying EM Field")) {
+        ctx.device->set_compute_type(graphic::Compute_type::Time_varying_EM_field);
     }
     ImGui::SeparatorText("Fade Effect");
 

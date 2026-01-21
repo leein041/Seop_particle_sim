@@ -115,6 +115,7 @@ class Example
     {
         imgui_core_.update();
         input_.update(ctx_);
+        scene_.update(ctx_);
         if (!imgui_core_.state().is_ui_hovered)
             scene_.update_camera(ctx_);
     }

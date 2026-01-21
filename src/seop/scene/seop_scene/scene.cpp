@@ -26,8 +26,12 @@ void Scene::init()
     create_attractors(data_.attractor_properties.attractor_count);
 }
 
-void Scene::update()
+void Scene::update(Context& ctx)
 {
+    data_.wire_properites.wire_current_dt =
+        data_.wire_properites.max_i * data_.wire_properites.w * cos(data_.wire_properites.w * static_cast<float>(ctx.time));
+    data_.wire_properites.wire_current =
+        data_.wire_properites.max_i * sin(data_.wire_properites.w * static_cast<float>(ctx.time));
 }
 
 void Scene::end_frame()
@@ -128,7 +132,7 @@ void Scene::create_attractors(size_t count)
 
 void Scene::update_camera(Context& ctx)
 {
-    Camera_state& cam_state = camera_.camera_state();
+    Camera_state&    cam_state = camera_.camera_state();
     Camera_trasform& tr = camera_.data().transform;
     // NOTE : it's RH
     if (ctx.input->get_key(input::Key_code::W)) {
@@ -166,7 +170,6 @@ void Scene::update_camera(Context& ctx)
         tr.yaw += dx;
         tr.pitch -= dy;
         cam_state.is_move = true;
-
     }
     if (ctx.input->get_key_down(input::Key_code::LButton)) {
         Vec2   pos_ndc = ctx.window->get_cursor_pos_ndc();

@@ -2,7 +2,7 @@
 
 namespace seop::graphic
 {
-const char* magnetic_field_by_square_cs_source = R"(#version 430 core
+const char* static_magnetic_field_cs_source = R"(#version 430 core
 layout(local_size_x = 256) in; // 워크그룹 크기
 struct Particle
 {
@@ -30,8 +30,11 @@ uniform uint u_wire_count;
 uniform uint u_particle_count;
 
 uniform float u_dt;
+uniform float u_time;
 uniform float u_time_scale;
 uniform float u_particle_col; 
+uniform float u_w;
+uniform float u_max_i;
 
 void main()
 {
@@ -39,13 +42,19 @@ void main()
     if (i >= u_particle_count) return; // 범위를 벗어나면 중단
     vec3 pos = particles[i].pos.xyz;
     vec3 vel = particles[i].vel.xyz;
+    float scale = 1000.0; // 입자 움직임 관찰하기 쉽게
+    
 
-    // B. 전류 가정 ( 정사각형 도선 )
-    // B. B = μ₀/4π ∫l̂*r̂/r² dl ( bio-savar )
+
+    // B. B = μ₀/4π ∫l̂*r̂/r² dl ( bio-savar ) 유도장과 방사장은 다름. 방사장은 r^2 이 아닌 r 에 반비례..
 
     vec3 B = vec3(0.0);
+    vec3 E = vec3(0.0);
+    vec3 B_dir = vec3(0.0);
+    vec3 E_dir =  vec3(0.0);
+    vec3 total_force = vec3(0.0f);
+
     for(int j = 0; j<u_wire_count; j++){
-        float I = 10000000.0; 
         vec3 A = conductor_vertices[j * 2].pos.xyz;
         vec3 B_p = conductor_vertices[j * 2 + 1].pos.xyz;
         vec3 L = B_p - A;
@@ -59,13 +68,30 @@ void main()
         float sina = dot(normalize(L),normalize(AP));
         float sinb = dot(normalize(L),normalize(BP));
 
-        vec3 B_dir = normalize(cross(L, HP));
         float r = length(HP);
         if (r < 2.0) continue;   
-        B += B_dir * I / (4.0 * 3.1415 * r) * (sina - sinb);
-    }
+        float c = 300.0; // 시뮬레이션 상의 빛의 속도 (적절히 조절)
+        float delay = r / c;
+        float retarded_time = u_time - delay;
+    
+        // 현재 u_current 대신, 거리만큼 지연된 시간의 전류값을 계산
+        float I_delayed = u_max_i * sin(u_w * retarded_time);
+        float dI_dt_delayed = u_max_i * u_w * cos(u_w * retarded_time);
 
-    vel = B;       
+        // 자기장
+        B_dir = normalize(cross(L, HP));
+        B += B_dir * I_delayed * scale / (4.0 * 3.1415 * r) * (sina - sinb);
+
+        // 전기장
+        E_dir =  normalize(L);
+        E += -E_dir * dI_dt_delayed * scale / (4.0 * 3.1415 * r) * (sina - sinb);
+
+        // 로런츠 힘, 입자가 받는 힘 F = q(E + u X B)
+        total_force += 1.0 * (E + cross(vel, B));
+
+    }
+    vel += total_force * u_dt;
+    vel *= 0.98;
 
     if(length(vel) > 300.0)
     {
@@ -77,12 +103,8 @@ void main()
     particles[i].pos.xyz = pos;
     particles[i].vel.xyz = vel;
 
-    // color
-    float speed = length(vel);
-    float col_t = speed * 0.001;
-    float intensity = clamp(col_t, 0.0, 1.0);
-    particles[i].col = vec4(intensity, u_particle_col, 1.0 - intensity, 1.0);
-    
+    float phase_col = dot(normalize(vel), E_dir) * 0.5 + 0.5;
+    particles[i].col = vec4(phase_col, u_particle_col, 1.0 - phase_col, 1.0);
 }
 )";
 }

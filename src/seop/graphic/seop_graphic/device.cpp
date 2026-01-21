@@ -1,7 +1,7 @@
 #include "device.hpp"
 #include "compute_shaders/electro_cs_shader.hpp"
 #include "compute_shaders/gravity_cs_source.hpp"
-#include "compute_shaders/magnetic_field_cs_shader.hpp"
+#include "compute_shaders/static_magnetic_field_cs_shader.hpp"
 #include "shaders/grid_shader.hpp"
 #include "shaders/particle_shader.hpp"
 #include "shaders/quad_shader.hpp"
@@ -54,16 +54,19 @@ void Device::init(Context& ctx)
             glUniform1f(glGetUniformLocation(program, "u_particle_col"), ctx.scene->data().particle_properties.col);
         });
     add_compute_task(
-        Shader_task_type::Compute_magnetic_field, magnetic_field_by_square_cs_source,
+        Shader_task_type::Compute_static_magnetic_field, static_magnetic_field_cs_source,
         [this](uint32_t program, Context& ctx) {
             glUseProgram(program);
             glUniform1ui(glGetUniformLocation(program, "u_particle_count"),
                          (uint32_t)ctx.scene->data().particle_properties.count);
             glUniform1ui(glGetUniformLocation(program, "u_wire_count"), (uint32_t)test_wires_.vb.vertices.size() / 2);
             glUniform1f(glGetUniformLocation(program, "u_dt"), ctx.f_dt);
+            glUniform1f(glGetUniformLocation(program, "u_time"), static_cast<float>(ctx.time));
             glUniform1f(glGetUniformLocation(program, "u_time_scale"),
                         ctx.scene->data().particle_properties.time_scale);
             glUniform1f(glGetUniformLocation(program, "u_particle_col"), ctx.scene->data().particle_properties.col);
+            glUniform1f(glGetUniformLocation(program, "u_w"), ctx.scene->data().wire_properites.w);
+            glUniform1f(glGetUniformLocation(program, "u_max_i"), ctx.scene->data().wire_properites.max_i);
         });
     add_compute_task(Shader_task_type::Compute_gravity, electromagnetic_cs_source, [](uint32_t program, Context& ctx) {
         glUseProgram(program);
@@ -213,8 +216,8 @@ void Device::compute(Context& ctx)
     if (data_.compute_type & Compute_type::Electromagnetic) {
         shader_tasks_[to_idx(Shader_task_type::Compute_electromagnetic)].uniform_setter(ctx);
     }
-    if (data_.compute_type & Compute_type::Magnetic) {
-        shader_tasks_[to_idx(Shader_task_type::Compute_magnetic_field)].uniform_setter(ctx);
+    if (data_.compute_type & Compute_type::Time_varying_EM_field) {
+        shader_tasks_[to_idx(Shader_task_type::Compute_static_magnetic_field)].uniform_setter(ctx);
     }
     // 실행
     uint32_t num_groups = static_cast<uint32_t>((ctx.scene->data().particle_properties.count + 255) / 256);

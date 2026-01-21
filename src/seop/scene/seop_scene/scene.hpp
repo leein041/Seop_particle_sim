@@ -53,7 +53,10 @@ class Attractor_data
 class Scene_electronic_properites
 {
   public:
-    float I{0.0f};
+    float wire_current{0.0f};
+    float wire_current_dt{0.0f};
+    float w = 2.0f; // 각 주파수
+    float max_i = 10.0f;
 };
 
 class Scene_magnetic_properites
@@ -82,8 +85,7 @@ class Scene_data
     Scene_entities              entities;
     Particle_propetires         particle_properties;
     Attractor_data              attractor_properties;
-    Scene_electronic_properites electronic_properites;
-    Scene_magnetic_properites   magnetic_properites;
+    Scene_electronic_properites wire_properites;
 };
 
 class Scene
@@ -93,7 +95,7 @@ class Scene
     Scene() noexcept;
     ~Scene() = default;
     void               init();
-    void               update();
+    void               update(Context& ctx);
     void               end_frame();
 
     void               reset();
@@ -109,7 +111,6 @@ class Scene
     [[nodiscard]] auto camera() -> Camera&;
 
     // temp
-
     auto               get_hash(uint32_t v) -> uint32_t;
     auto               int_to_float(int v) -> float;
 

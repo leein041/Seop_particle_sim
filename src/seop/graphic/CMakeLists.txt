@@ -11,7 +11,7 @@ target_sources(${_target} PRIVATE
     seop_graphic/shaders/wire_shader.hpp
     seop_graphic/compute_shaders/gravity_cs_source.hpp 
     seop_graphic/compute_shaders/electro_cs_shader.hpp 
-    seop_graphic/compute_shaders/magnetic_field_cs_shader.hpp
+    seop_graphic/compute_shaders/static_magnetic_field_cs_shader.hpp
 )
 
 target_link_libraries(${_target}

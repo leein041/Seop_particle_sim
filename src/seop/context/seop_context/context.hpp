@@ -28,6 +28,6 @@ class Context
     input::Input*          input{nullptr};
 
     float f_dt{0.0f};
-    double time{0.0f};
+    double time{0.0f}; // 런타임 시간
 };
 } // namespace seop
