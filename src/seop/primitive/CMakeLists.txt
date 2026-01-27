@@ -8,7 +8,11 @@ target_sources(${_target} PRIVATE
 )
 
 target_link_libraries(${_target} PUBLIC
+    OpenGL::GL
+    GLEW::GLEW
+
     seop::math
+    seop::util
 )
 
 target_include_directories(${_target} PUBLIC

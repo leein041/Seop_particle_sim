@@ -20,6 +20,7 @@ target_link_libraries(${_target} PRIVATE
     seop::graphic
     seop::scene
     seop::imgui
+    seop::editor
     
     GLEW::GLEW
     glfw

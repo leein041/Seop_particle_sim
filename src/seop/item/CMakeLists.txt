@@ -5,10 +5,16 @@ add_library(seop::item ALIAS ${_target})
 target_sources(${_target} PRIVATE
     seop_item/item.hpp
     seop_item/item.cpp
+    seop_item/wire.hpp
+    seop_item/wire.cpp
 )
 
 target_link_libraries(${_target} PUBLIC
+    OpenGL::GL
+    GLEW::GLEW
+    
     seop::primitive
+    seop::opengl
 )
 
 target_include_directories(${_target} PUBLIC

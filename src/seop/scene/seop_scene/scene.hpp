@@ -1,18 +1,15 @@
 #pragma once
 #include "camera.hpp"
 #include "seop_context/context.hpp"
+#include "seop_item/item.hpp"
+#include "seop_item/wire.hpp"
+
 #include <vector>
 
 namespace seop
 {
 class Context;
 }
-
-namespace seop::entity
-{
-class Particle;
-class Attractor;
-} // namespace seop::entity
 
 namespace seop::scene
 {
@@ -39,7 +36,7 @@ class Particle_propetires
     bool   particle_reset{false};
     float  size{1.0f};
     float  col{0.0f};
-    size_t count{50000};
+    size_t count{0};
     // temp
     float  time_scale{1.0f};
 };
@@ -50,26 +47,21 @@ class Attractor_data
     size_t attractor_count{0};
 };
 
-class Scene_electronic_properites
+class Wire_properites
 {
   public:
-    float wire_current{0.0f};
-    float wire_current_dt{0.0f};
-    float w = 2.0f; // 각 주파수
-    float max_i = 10.0f;
-};
-
-class Scene_magnetic_properites
-{
-  public:
-    float      I{0.0f};
+    float           wire_current{0.0f};
+    float           wire_current_dt{0.0f};
+    float           w = 2.0f; // 각 주파수
+    float           max_i = 10.0f;
+    float           c = 2000.0f; // 광속
+    item::Wire_node wire_nodes;
 };
 
 class Scene_entities
 {
   public:
-    std::vector<entity::Attractor> attractors;
-    std::vector<entity::Particle>  particles;
+    item::Particle particles;
 };
 
 class Scene_context
@@ -81,11 +73,12 @@ class Scene_data
 
 {
   public:
-    Scene_force                 forces;
-    Scene_entities              entities;
-    Particle_propetires         particle_properties;
-    Attractor_data              attractor_properties;
-    Scene_electronic_properites wire_properites;
+    float               scene_speed{1.0f};
+    Scene_force         forces;
+    Scene_entities      entities;
+    Particle_propetires particle_properties;
+    Attractor_data      attractor_properties;
+    Wire_properites     wire_properites;
 };
 
 class Scene
@@ -100,10 +93,9 @@ class Scene
 
     void               reset();
     void               register_commnad(Context& ctx);
-    void               create_particles(size_t count);
-    void               create_attractors(size_t count);
-    void               update_camera(Context& ctx);
-    auto               get_col(float t) -> math::Vec4&;
+    void               create_particles_sphere_group(size_t count);
+    void               create_particles_cube_group(size_t count);
+    void               add_wire();
 
     [[nodiscard]] auto data() const -> const Scene_data&;
     [[nodiscard]] auto data() -> Scene_data&;
@@ -115,10 +107,8 @@ class Scene
     auto               int_to_float(int v) -> float;
 
   private:
-    void                    create_col_table();
-    std::vector<math::Vec4> col_table;
-    Scene_data              data_;
-    Camera                  camera_;
+    Scene_data data_;
+    Camera     camera_;
 };
 
 } // namespace seop::scene

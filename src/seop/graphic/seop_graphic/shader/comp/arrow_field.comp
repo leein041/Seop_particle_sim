@@ -1,0 +1,99 @@
+#version 430 core
+
+layout(local_size_x = 256) in; // 워크그룹 크기
+
+struct Conductor_node
+{
+    vec4 pos;
+    vec4 col;
+    float size;
+    float pad[3];
+};
+struct Arrow
+{
+    vec4 pos;
+    vec4 field; // xyz : 위치 w : 세기
+};
+
+layout(std430, binding = 1) buffer ConductorBuffer
+{
+    Conductor_node conductor_vertices[];
+};
+layout(std430, binding = 2) buffer ArrowBuffer
+{
+    Arrow arrows[];
+};
+
+uniform uint u_wire_count;
+uniform uint u_arrow_count;
+
+uniform float u_time;
+uniform float u_w;
+uniform float u_max_i;
+uniform float u_c;
+
+void main()
+{
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= u_arrow_count) return;
+    vec3 pos = arrows[i * 6].pos.xyz;
+
+    // B. B = μ₀/4π ∫l̂*r̂/r² dl ( bio-savar ) 유도장과 방사장은 다름. 방사장은 r^2 이 아닌 r 에 반비례..
+    float scale = 100000.0;
+    vec3 total_B = vec3(0.0);
+    vec3 total_E = vec3(0.0);
+
+    for(int j = 0; j<u_wire_count; j++){
+        vec3 A = conductor_vertices[j * 2].pos.xyz;
+        vec3 B_p = conductor_vertices[j * 2 + 1].pos.xyz;
+        vec3 L = B_p - A;
+        if (length(L) < 1.0) continue;   
+        
+        vec3 AP = pos - A;
+        vec3 BP = pos - B_p;
+        float t = dot(AP, L) / dot(L, L);
+        vec3 H = A + t * L; // H = A + tv
+        vec3 HP = pos - H;
+        float sina = dot(normalize(L),normalize(AP));
+        float sinb = dot(normalize(L),normalize(BP));
+
+        float r = length(HP);
+        vec3 r_hat = normalize(HP); // 진행방향
+
+        if (r < 1.0) continue;   
+        float delay = r / u_c;
+        float retarded_time = u_time - delay;
+    
+        // 현재 u_current 대신, 거리만큼 지연된 시간의 전류값을 계산
+        float I_delayed = u_max_i * sin(u_w * retarded_time);
+        float dI_dt_delayed = u_max_i * u_w * cos(u_w * retarded_time);
+
+        // 전기장
+        vec3 L_hat = normalize(L);
+        vec3 E_rad = (cross(r_hat, cross(r_hat, L_hat))) * (dI_dt_delayed / (4.0 * 3.1415 * r * u_c)) * (sina - sinb);
+        vec3 E = E_rad * scale;
+
+        // 자기장
+        vec3 B = cross(r_hat, E) / (120.0 * 3.141592);
+
+
+        // 로런츠 힘, 입자가 받는 힘 F = q(E + u X B)
+        total_E += E;
+        total_B += B;
+    }
+
+    // arrow field 데이터 세팅
+    float E_str = length(total_E);
+    vec3 E_dir = (E_str > 0.00001) ? total_E / E_str : vec3(0.0);
+    arrows[i * 6 + 1].field = vec4(E_dir, E_str);
+
+    float B_str = length(total_B);
+    vec3 B_dir = (B_str > 0.00001) ? total_B / B_str : vec3(0.0);
+    arrows[i * 6 + 3].field = vec4(B_dir, B_str * 377.0); // 전기장 화살표와 동일한 크기로 120π 만큼 스케일링
+
+    vec3 P = cross(total_E,total_B);
+    float P_str = length(P);
+    vec3 P_dir = (P_str > 0.00001) ? P / P_str : vec3(0.0);
+    arrows[i * 6 + 5].field = vec4(P_dir, P_str * 1.0);
+
+}

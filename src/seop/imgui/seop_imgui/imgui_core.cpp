@@ -65,10 +65,8 @@ void Imgui_core::render(Context& ctx)
 
 void Imgui_core::end_frame()
 {
-    state_.is_reset = false;
     state_.is_ui_hovered = false;
 }
-
 void Imgui_core::shut_down()
 {
     ImGui_ImplOpenGL3_Shutdown();

@@ -5,22 +5,21 @@ add_library(seop::graphic ALIAS ${_target})
 target_sources(${_target} PRIVATE
     seop_graphic/device.hpp
     seop_graphic/device.cpp 
-    seop_graphic/shaders/quad_shader.hpp
-    seop_graphic/shaders/particle_shader.hpp
-    seop_graphic/shaders/grid_shader.hpp
-    seop_graphic/shaders/wire_shader.hpp
-    seop_graphic/compute_shaders/gravity_cs_source.hpp 
-    seop_graphic/compute_shaders/electro_cs_shader.hpp 
-    seop_graphic/compute_shaders/static_magnetic_field_cs_shader.hpp
+    seop_graphic/shader_program.hpp
+    seop_graphic/shader_program.cpp
 )
 
 target_link_libraries(${_target}
     PUBLIC
+    glfw
+    GLEW::GLEW
+    OpenGL::GL
+
     seop::math
     seop::primitive
+    seop::opengl
+    seop::util
     seop::item
-    seop::raytrace
-    seop::entity
     seop::context
     seop::msg
     

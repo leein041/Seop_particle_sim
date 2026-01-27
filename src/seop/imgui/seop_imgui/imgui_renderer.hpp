@@ -1,5 +1,7 @@
 #pragma once
 
+#include<string>
+
 namespace seop
 {
 class Context;
@@ -29,6 +31,8 @@ class Imgui_renderer
     [[nodiscard]] auto hovering_ui() -> bool;
 
   private:
+  void make_title(const std::string& title);
+  void make_sub_title(const std::string& title);
 };
 
 inline constexpr float MIN_GRAITY = 0.0f;
@@ -43,7 +47,7 @@ inline constexpr float MIN_CURRENT_INTENSITY = -1000.0f;
 inline constexpr float MAX_CURRENT_INTENSITY = 1000.0f;
 
 inline constexpr float MIN_CAMERA_SPEED = 100.0f;
-inline constexpr float MAX_CAMERA_SPEED = 3000.0f;
+inline constexpr float MAX_CAMERA_SPEED = 6000.0f;
 inline constexpr float MIN_CAMERA_FOV = 0.1f;
 inline constexpr float MAX_CAMERA_FOV = 2.0f;
 inline constexpr float MIN_CAMERA_NEAR = 1.0f;

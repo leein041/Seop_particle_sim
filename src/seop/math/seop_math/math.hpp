@@ -1,6 +1,6 @@
 #pragma once
 
-/*
+/* 기호 모음
  ̂
 
 
@@ -83,6 +83,11 @@ class Vec4
 {
   public:
     constexpr Vec4(float x, float y, float z, float w) noexcept : x_{x}, y_{y}, z_{z}, w_{w}
+    {
+    }
+
+    constexpr Vec4(int x, int y, int z, int w) noexcept
+        : x_{static_cast<float>(x)}, y_{static_cast<float>(y)}, z_{static_cast<float>(z)}, w_{static_cast<float>(w)}
     {
     }
 

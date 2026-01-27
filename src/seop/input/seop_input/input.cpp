@@ -21,8 +21,6 @@ void Input::update(Context& ctx)
 
 void Input::reset()
 {
-    Input_data new_data;
-    data_ = new_data;
 }
 
 auto Input::data() const -> const Input_data&

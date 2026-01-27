@@ -7,13 +7,7 @@ namespace seop::entity
     static constexpr float INV_MAX_SPEED = 1 / MAX_SPEED;
     //static constexpr size_t MAX_PARTICLE = 100000;
 
-    class Particle
-    {
-        public:
-        math::Vec4 pos{0.0f, 0.0f, 0.0f, 0.0f};
-        math::Vec4 col{1.0f, 1.0f, 1.0f, 1.0f};
-        math::Vec4 vel{0.0f, 0.0f, 0.0f, 0.0f};
-    };
+
 
 
 }

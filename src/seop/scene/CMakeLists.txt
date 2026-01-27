@@ -13,13 +13,13 @@ target_sources(${_target} PRIVATE
 )
 
 target_link_libraries(${_target}
+    seop::context
     seop::command
     seop::msg
     seop::math
-    seop::entity
-    seop::input
-    seop::window
-    seop::context
+    seop::primitive
+
+    seop::item
 )
 
 target_include_directories(${_target} PUBLIC

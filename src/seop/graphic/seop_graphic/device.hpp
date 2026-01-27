@@ -1,12 +1,13 @@
 #pragma once
+#include "shader_program.hpp"
+
 #include "seop_item/item.hpp"
+#include "seop_opengl/buffer.hpp"
+#include "seop_opengl/shader.hpp"
+#include "seop_opengl/texture.hpp"
 #include "seop_primitive/vertex.hpp"
 
-#include "seop_context/context.hpp"
-#include "seop_entity/particle.hpp"
-#include "seop_input/input.hpp"
 #include "seop_math/math.hpp"
-#include "seop_scene/scene.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -14,7 +15,13 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
+
+namespace seop
+{
+class Context;
+}
 
 namespace seop::msg
 {
@@ -26,79 +33,50 @@ namespace seop::primive
 class Vertex_pcs;
 }
 
-namespace seop::raytrace
-{
-class Ray;
-}
-
 namespace seop::graphic
 {
+class Shader_program;
+
 enum Compute_type : uint32_t {
     None = 0,
     Gravity = 1 << 1,
     Electromagnetic = 1 << 2,
     Time_varying_EM_field = 1 << 3,
-    End = 1 << 4,
+
+    Lorenz_equation = 1 << 4,
+    End = 1 << 5,
 };
 
 class Device_data
 {
   public:
     float        fade_scale{0.1f};
-    float        frame_rate{60.0f};
-    float        inv_frame_rate{1 / 60.0f};
+    float        frame_rate{240.0f};
+    float        inv_frame_rate{1 / frame_rate};
     math::Vec4   back_col = {0.0f, 0.0f, 0.0f, 1.0f};
     Compute_type compute_type{Compute_type::Time_varying_EM_field};
 };
 
-// new
-using Uniform_setter = std::function<void(Context&)>;
-enum class Shader_task_type {
-    Compute_gravity,
-    Compute_electromagnetic,
-    Compute_static_magnetic_field,
+enum class Shader_program_type {
 
+    Compute_arrow_field,
+    Compute_static_magnetic_field,
+    Compute_lorenz_equation,
+
+    Render_arrow,
     Render_particle,
     Render_screen_quad,
     Render_grid,
     Render_wire, // test
     End,
 };
-enum class Shader_buffer_type {
-    Particle,
-    Conductor_wire,
-    End,
-};
+
 enum class Frame_buffer_type {
     Particle_layer,
     End,
 };
 constexpr size_t FRAME_BUFFER_MAX = static_cast<size_t>(Frame_buffer_type::End);
-constexpr size_t SHADER_TASK_MAX = static_cast<size_t>(Shader_task_type::End);
-constexpr size_t SHADER_BUFFER_MAX = static_cast<size_t>(Shader_buffer_type::End);
-
-class Shader_task
-{
-  public:
-    uint32_t       program_id{0};
-    Uniform_setter uniform_setter;
-};
-
-class Shader_buffer
-{
-  public:
-    uint32_t id;
-};
-
-class Frame_buffer
-{
-  public:
-    bool     use_tex{false};
-    uint32_t buf_id;
-    uint32_t tex_id;
-};
-// temp
-enum class Edit_mode { Plane_xy, Plane_yz, Plane_zx, End };
+constexpr size_t SHADER_TASK_MAX = static_cast<size_t>(Shader_program_type::End);
 
 class Device final
 {
@@ -106,31 +84,16 @@ class Device final
     Device();
     ~Device() noexcept = default;
 
-    // temp helper
-    template <typename T>
-    constexpr size_t to_idx(T e)
-    {
-        return static_cast<size_t>(e);
-    }
-
     void init(Context& ctx);
+    void update(Context& ctx);
     void clear_frame();
     void shut_down();
     void compute(Context& ctx);
     void render(Context& ctx);
     auto on_message(msg::Message& msg) -> bool;
 
-    void prepare_grid(Context& ctx);
-    void prepare_particle(Context& ctx);
-    void prepare_quad(Context& ctx);
-    void draw_quad();
-    void draw_grid();
-    void draw_particle(size_t cnt);
-
-    void init_draw_propeties();
     void update_frame_buffer(Frame_buffer_type type, int width, int height);
-    void update_shader_buffer(uint32_t buffer_id, uint32_t binding_point, GLsizeiptr buffer_size, const void* data);
-    void update_vertex_buffer(uint32_t buffer_id, GLsizeiptr buffer_size, const void* data);
+    void update_shader_buffer(uint32_t buffer_id, uint32_t bind_slot, GLsizeiptr buffer_size, const void* data);
 
     [[nodiscard]] auto data() const -> const Device_data&;
     [[nodiscard]] auto data() -> Device_data&;
@@ -138,59 +101,65 @@ class Device final
     void               set_frame_rate(float rate);
     void               set_back_col(const math::Vec4& col);
     void               set_compute_type(Compute_type type);
+    void               set_shader_task(Context& ctx);
 
-    // TODO : temp region need refactoring
     // temp
-    enum Vertex_state : uint16_t {
-        STATE_NONE = 0,
-        STATE_HOVER_ONLY = 1 << 1,
-        STATE_HOVER_WIRE = 1 << 2,
-        STATE_SELECTED = 1 << 3,
-        STATE_HOLD = 1 << 4,
-        STATE_INACTIVE = 1 << 5,
-        STATE_DESTROYED = 1 << 6,
+    enum class Shader_buffer_slot {
+        Particle,
+        Wire,
+        Arrow,
+        End,
     };
+    bool             view_electric_field_arrow{false};
+    bool             view_magnetic_field_arrow{false};
+    bool             view_poynting_field_arrow{false};
+    int              arrow_min_range_x{-1000};
+    int              arrow_max_range_x{1000};
+    int              arrow_min_range_y{-1000};
+    int              arrow_max_range_y{1000};
+    int              arrow_min_range_z{-1000};
+    int              arrow_max_range_z{1000};
+    int              arrow_interval{200};
+    float            arrow_scale{1.0f};
+    float            arrow_thickness{1.0f};
+    item::Arrow_node arrow_nodes_;
+    void             init_arrow();
+    void             create_arrow(int interval, int x_min, int x_max, int y_min, int y_max, int z_min, int z_max);
 
-    float                snap_interval{50.0f};
-    math::Closest_points closest_points_to_line;
-    Edit_mode            edit_mode_{Edit_mode::Plane_xy};
+    void             prepare_arrow(Context& ctx);
+    void             draw_arrow();
 
-    math::Vec3           pre_snapped_pos{math::Vec3::Zero};
-    math::Vec3           cur_intersection{math::Vec3::Zero};
-    item::Wire           test_wires_;
-
-    void                 create_wire();
-    void                 add_wire();
-    auto                 make_ray(const math::Vec2& ndc_pos, const math::Vec3& cam_pos, const math::Matrix& view,
-                                  const math::Matrix& projection) -> raytrace::Ray;
-    void                 raytrace(Context& ctx);
-    auto get_snap_pos(float interval, const math::Vec3& ray_ori, const math::Vec3& ray_dir, const math::Vec3& vert_pos,
-                      Edit_mode mode) -> math::Vec3;
-    // temp end
-  private:
-    void     add_shader_buffer(Shader_buffer_type type);
-    void     add_compute_task(Shader_task_type type, const char* cs_src,
-                              std::function<void(uint32_t, Context&)> uniform_setter);
-    void     add_render_task(Shader_task_type type, const char* vs_src, const char* fs_src,
-                             std::function<void(uint32_t, Context&)> uniform_setter);
-    void     add_frame_buffer(Frame_buffer_type type, int width, int height);
-
-    void     create_screen_qaud();
-    void     create_grid();
-    uint32_t create_cs(const char* src);
-    uint32_t create_vs(const char* src);
-    uint32_t create_fs(const char* src);
-
-    uint32_t particle_layer_buffer;
-    uint32_t particle_layer_tex;
+    void             set_uniform_scene_data(uint32_t program_id, Context& ctx);
+    void             set_uniform_time_data(uint32_t program_id, Context& ctx);
 
   private:
-    Device_data                                  data_;
-    std::array<Shader_buffer, SHADER_BUFFER_MAX> shader_buffers_;
-    std::array<Shader_task, SHADER_TASK_MAX>     shader_tasks_;
-    std::array<Frame_buffer, FRAME_BUFFER_MAX>   frame_buffers_;
+    void prepare_grid(Context& ctx);
+    void prepare_screen_quad(Context& ctx, bool use_tex);
+    void prepare_particle(Context& ctx);
+    void prepare_wire(Context& ctx);
+    void draw_grid();
+    void draw_screen_quad();
+    void draw_particle(Context& ctx);
+    void draw_wire(Context& ctx);
 
-    item::Render_item<primitive::Vertex_pu>      screen_quad_;
-    item::Render_item<primitive::Vertex_pc>      grid_quad_;
+    void set_compute_task(Shader_program_type type, const std::string& cs_path,
+                          std::function<void(uint32_t, Context&)> uniform_setter);
+    void set_render_task(Shader_program_type type, const std::string& vs_path, const std::string& fs_path,
+                         std::function<void(uint32_t, Context&)> uniform_setter);
+    void set_frame_buffer(Frame_buffer_type type, int width, int height);
+
+    void init_screen_qaud();
+    void init_grid();
+    void init_particle(Context& ctx);
+    void init_wire(Context& ctx);
+
+    void hot_load_shader(Context& ctx);
+
+  private:
+    Device_data                                        data_;
+    std::array<Shader_program, SHADER_TASK_MAX>        shader_programs_;
+    std::array<opengl::Frame_buffer, FRAME_BUFFER_MAX> frame_buffers_;
+    item::Screen_quad                                  screen_quad_;
+    item::Grid_quad                                    grid_quad_;
 };
 } // namespace seop::graphic

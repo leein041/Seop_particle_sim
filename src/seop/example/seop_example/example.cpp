@@ -2,6 +2,7 @@
 
 #include "seop_command/command.hpp"
 #include "seop_context/context.hpp"
+#include "seop_editor/editor.hpp"
 #include "seop_entity/attractor.hpp"
 #include "seop_entity/particle.hpp"
 #include "seop_graphic/device.hpp"
@@ -27,7 +28,7 @@ using namespace seop;
 class Example
 {
   public:
-    Example() : device_{}
+    Example() : editor_(scene_.camera())
     {
     }
 
@@ -50,8 +51,6 @@ class Example
     void tick()
     {
         const auto tick_end_time = std::chrono::steady_clock::now();
-
-        // Update fixed steps
         const auto new_time = std::chrono::steady_clock::now();
         const auto duration = new_time - m_current_time;
         double     frame_time = std::chrono::duration<double, std::ratio<1>>(duration).count();
@@ -63,8 +62,7 @@ class Example
         m_current_time = new_time;
         m_time_accumulator += frame_time;
 
-        float        inv_frame_rate = device_.data().inv_frame_rate;
-        const double dt = 1.0 * inv_frame_rate;
+        const double dt = 1.0 * device_.data().inv_frame_rate;
         ctx_.f_dt = static_cast<float>(dt);
 
         // update
@@ -72,18 +70,13 @@ class Example
 
         // compute
         while (m_time_accumulator >= dt) {
+            ctx_.d_time += dt;
             device_.compute(ctx_);
             m_time_accumulator -= dt;
-            ctx_.time += dt;
         }
         // render
         device_.render(ctx_);
         imgui_core_.render(ctx_);
-
-        // reset
-        if (imgui_core_.state().is_reset) {
-            reset();
-        }
     }
 
     void register_command()
@@ -100,6 +93,7 @@ class Example
         ctx_.device = &device_;
         ctx_.imgui = &imgui_core_;
         ctx_.input = &input_;
+        ctx_.editor = &editor_;
 
         window_.init();
         scene_.init();
@@ -107,17 +101,17 @@ class Example
         imgui_core_.init(ctx_);
         input_.init();
 
-        reset();
         register_command();
     }
 
     void update()
     {
+        device_.update(ctx_);
         imgui_core_.update();
         input_.update(ctx_);
         scene_.update(ctx_);
         if (!imgui_core_.state().is_ui_hovered)
-            scene_.update_camera(ctx_);
+            editor_.update(ctx_);
     }
 
     void begin_frame()
@@ -133,12 +127,6 @@ class Example
         window_.buffer_swap();
     }
 
-    void reset()
-    {
-        input_.reset();
-        scene_.reset();
-    }
-
   private:
     Context                               ctx_;
     msg::Message_queue                    msg_queue_;
@@ -148,6 +136,7 @@ class Example
     imgui::Imgui_core                     imgui_core_;
     scene::Scene                          scene_;
     input::Input                          input_;
+    editor::Editor                        editor_;
 
     std::chrono::steady_clock::time_point m_current_time;
     double                                m_time_accumulator{0.0};

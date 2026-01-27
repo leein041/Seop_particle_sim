@@ -95,7 +95,7 @@ void Imgui_renderer::show_frame_rate(Context& ctx)
     graphic::Device_data& data = ctx.device->data();
     ImGui::Text("Target Frame Rate");
     if (ImGui::SliderFloat("##fps_slider", &data.frame_rate, 10.0f, 240.0f, "%.0f FPS")) {
-        data.inv_frame_rate = 1.0f / data.frame_rate;
+        ctx.device->set_frame_rate(data.frame_rate);
     }
 
     ImGui::End();
@@ -118,18 +118,35 @@ void Imgui_renderer::show_scene_data(Context& ctx)
     } else if (ctx.device->data().compute_type == graphic::Compute_type::Time_varying_EM_field) {
         ImGui::SeparatorText("Current");
 
-        ImGui::Text("Max Current");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-        ImGui::SliderFloat("##max_current", &data.wire_properites.max_i, -10.0f, 10.0f, "%.1f");
+        make_sub_title("Amplitude");
+        ImGui::SliderFloat("##max_current", &data.wire_properites.max_i, 0.0f, 20.0f, "%.1f");
 
-        ImGui::Text("Angle Frequency");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-        ImGui::SliderFloat("##angle_frequency", &data.wire_properites.w, 1.0f, 100.0f, "%1.f");
+        make_sub_title("Angle Frequency");
+        ImGui::DragFloat("##angle_frequency", &data.wire_properites.w, 1.0f, 1.0f, 200.0f, "%1.f",
+                         ImGuiSliderFlags_Logarithmic);
+
+        make_sub_title("Light Velocity");
+        ImGui::DragFloat("##light_velociy", &data.wire_properites.c, 1.0f, 1.0f, 2000.0f, "%1.f",
+                         ImGuiSliderFlags_Logarithmic);
+
+#if 1
+        // 1. 데이터를 담을 배열 준비 (예: 100개 포인트)
+        float values[100];
+        for (int n = 0; n < 100; n++) {
+            values[n] = data.wire_properites.max_i *
+                        sinf(data.wire_properites.w * (n * ctx.f_dt + static_cast<float>(ctx.d_time)));
+        }
+
+        // 2. ImGui 창 안에서 그리기
+        ImGui::PlotLines("Sine Wave", values, IM_ARRAYSIZE(values), 0, "Overlay Text", -20.0f, 20.0f, ImVec2(0, 80));
+#endif
     }
     if (ImGui::Button("Add wire")) {
-        ctx.device->add_wire();
+        ctx.scene->add_wire();
+        ctx.msg_queue->Push_message<scene::Wire_buffer_update_message>(
+            ctx.scene->data().wire_properites.wire_nodes.vb.buf_.id_,
+            sizeof(primitive::Vertex_pcs) * ctx.scene->data().wire_properites.wire_nodes.vb.vertices.size(),
+            ctx.scene->data().wire_properites.wire_nodes.vb.vertices.data());
     }
 
     ImGui::End();
@@ -138,6 +155,19 @@ void Imgui_renderer::show_scene_data(Context& ctx)
 auto Imgui_renderer::hovering_ui() -> bool
 {
     return ImGui::GetIO().WantCaptureMouse;
+}
+
+void Imgui_renderer::make_title(const std::string& title)
+{
+    ImGui::Spacing();
+    ImGui::SeparatorText(title.c_str());
+}
+
+void Imgui_renderer::make_sub_title(const std::string& title)
+{
+    ImGui::Text(title.c_str());
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
 }
 
 void Imgui_renderer::show_particle_properties(Context& ctx)
@@ -150,37 +180,22 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
 
     scene::Particle_propetires& properties = ctx.scene->data().particle_properties;
 
-    ImGui::SeparatorText("Particle Speed");
-    ImGui::Text("Speed");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-    ImGui::SliderFloat("##particle_time", &properties.time_scale, -5.0f, 10.0f, "%.1f");
+    make_title("Particle Speed");
+    make_sub_title("Speed");
+    ImGui::DragFloat("##particle_speed", &properties.time_scale, 0.005f, -5.0f, 10.0f, "%.1f");
 
-    ImGui::SeparatorText("Particle size");
-    ImGui::Text("Size");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
+    make_title("Particle size");
+    make_sub_title("size");
     ImGui::SliderFloat("##particle_size", &properties.size, 1.0f, 10.0f, "%1.0f");
 
-    ImGui::SeparatorText("Particle Color");
-    ImGui::Text("Color");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-
-    ImVec4 active_col = ImVec4(0.3f, properties.col, 0.7f, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_SliderGrab, active_col);
-    ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_col); // 클릭 시 색상
-
+    make_title("Particle Color");
+    make_sub_title("Color");
     ImGui::SliderFloat("##particle_color", &properties.col, 0.0f, 1.0f, "%.3f");
-
-    ImGui::PopStyleColor(2);
 
 #if 1
     size_t cnt = properties.count;
-
-    ImGui::SeparatorText("Particle Count");
-    ImGui::Text("Input Count");
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // ~ 지점부터 입력창 시작
+    make_title("Particle Count");
+    make_sub_title("Count");
     ImGui::InputScalar("##particle_count", ImGuiDataType_U64, &cnt, NULL, NULL, "%zu");
 
     if (ImGui::IsItemDeactivatedAfterEdit()) // enter
@@ -190,8 +205,9 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
             cmd->execute();
             // FIXED : scene 멤버함수내에서 메세지를 발행해야하는데
             // scene 멤버함수가 ms_queue를 알아야함. 이게 싫다면 어케?
-            ctx.msg_queue->Push_message<scene::Particle_change_message>(cnt,
-                                                                        ctx.scene->data().entities.particles.data());
+            ctx.msg_queue->Push_message<scene::Particle_buffer_update_message>(
+                ctx.scene->data().entities.particles.vb.buf_.id_, sizeof(primitive::Vertex_pcv) * cnt,
+                ctx.scene->data().entities.particles.vb.vertices.data());
         }
     }
 #endif
@@ -211,7 +227,9 @@ void Imgui_renderer::show_particle_properties(Context& ctx)
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
 
     if (ImGui::Button("Reset particle", ImVec2(button_width, 0))) {
-        ctx.msg_queue->Push_message<scene::Particle_change_message>(cnt, ctx.scene->data().entities.particles.data());
+        ctx.msg_queue->Push_message<scene::Particle_buffer_update_message>(
+            ctx.scene->data().entities.particles.vb.buf_.id_, sizeof(primitive::Vertex_pcv) * cnt,
+            ctx.scene->data().entities.particles.vb.vertices.data());
     }
 
     ImGui::PopStyleColor(3);
@@ -256,40 +274,26 @@ void Imgui_renderer::show_camera_properties(Context& ctx)
         ImGui::EndTable();
     }
 
-    ImGui::Spacing();
-    ImGui::SeparatorText("Movement");
-    ImGui::Text("Speed");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
+    make_title("Movement");
+    make_sub_title("Speed");
     ImGui::SliderFloat("##CameraSpeed", &cam.data().transform.speed_scale, MIN_CAMERA_SPEED, MAX_CAMERA_SPEED,
-                       "x %.2f");
+                       "x %1.f");
 
-    ImGui::Spacing();
-    ImGui::SeparatorText("Frustum");
-
-    ImGui::Text("Field of view");
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    make_title("Frustum");
+    make_sub_title("FOV");
     if (ImGui::DragFloat("##field_of_view", &cam.data().frustum.fov, 0.005f, MIN_CAMERA_FOV, MAX_CAMERA_FOV, "%.3f")) {
         cam.make_projection();
     }
 
-    ImGui::Text("Near");
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    make_sub_title("Near");
     if (ImGui::DragFloat("##near", &cam.data().frustum.near, 1.f, MIN_CAMERA_NEAR, MAX_CAMERA_NEAR, "%1.f")) {
         cam.make_projection();
     }
-    ImGui::Text("Far");
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
-    ImGui::SetNextItemWidth(-FLT_MIN);
+
+    make_sub_title("Far");
     if (ImGui::DragFloat("##far", &cam.data().frustum.far, 10.f, MIN_CAMERA_FAR, MAX_CAMERA_FAR, "%1.f")) {
         cam.make_projection();
     }
-    float fov{0.785f};       // 약 45도
-    float aspect{1.777778f}; //
-    float near{0.1f};
-    float far{10000.0f};
 
     ImGui::Spacing();
     if (ImGui::Button("Reset View", ImVec2(-FLT_MIN, 0))) { // 가로로 꽉 찬 버튼
@@ -305,27 +309,167 @@ void Imgui_renderer::show_device_data(Context& ctx)
     ImGui::SetNextWindowBgAlpha(0.25f);
     ImGui::Begin("Device setting");
 
-    ImGui::SeparatorText("Compute Mode");
-    ImGui::SetNextItemWidth(-FLT_MIN); // 남은 가로 공간을 모두 채움
-    if (ImGui::Button("Gravity")) {
-        ctx.device->set_compute_type(graphic::Compute_type::Gravity);
+    // -------------------------------------------------------------------------------
+    make_title("Compute Type");
+    if (ImGui::Button("Lolernz Equation")) {
+        ctx.device->set_compute_type(graphic::Compute_type::Lorenz_equation);
     }
-    ImGui::SameLine();
-    if (ImGui::Button("Electromagnetic")) {
-        ctx.device->set_compute_type(graphic::Compute_type::Electromagnetic);
-    }
+    // -------------------------------------------------------------------------------
     ImGui::SameLine();
     if (ImGui::Button("Time Varying EM Field")) {
         ctx.device->set_compute_type(graphic::Compute_type::Time_varying_EM_field);
     }
-    ImGui::SeparatorText("Fade Effect");
+    // -------------------------------------------------------------------------------
 
-    ImGui::Text("Fade Speed");
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f); // 40% 지점부터 입력창 시작
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    make_title("Fade Setting");
+    make_sub_title("speed");
 
     if (ImGui::DragFloat("##fade_slider", &ctx.device->data().fade_scale, 0.005f, 0.001f, 1.0f, "%.3f",
                          ImGuiSliderFlags_Logarithmic)) {
+    }
+    // -------------------------------------------------------------------------------
+
+    make_title("Mode");
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+    if (ImGui::Button("Dark Mode")) {
+        ctx.device->set_back_col(math::Vec4{0.0f, 0.0f, 0.0f, 1.0f});
+    }
+    ImGui::PopStyleColor(3);
+    // -------------------------------------------------------------------------------
+
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.9f, 0.9f, 0.9f, 1.0f)); // button
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f)); // text
+    if (ImGui::Button("White Mode")) {
+        ctx.device->set_back_col(math::Vec4{1.0f, 1.0f, 1.0f, 1.0f});
+    }
+    ImGui::PopStyleColor(4);
+    // -------------------------------------------------------------------------------
+
+    make_title("View Field Setting");
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.5f, 0.5f, 1.0f)); // button
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.f, 0.4f, 0.4f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // text
+    if (ImGui::Button("Electric Field Arrow")) {
+        if (ctx.device->view_electric_field_arrow) {
+            ctx.device->view_electric_field_arrow = (false);
+        } else {
+            ctx.device->view_electric_field_arrow = (true);
+        }
+    }
+    ImGui::PopStyleColor(3);
+    // -------------------------------------------------------------------------------
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 1.0f, 1.0f)); // button
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // text
+    if (ImGui::Button("Magnetic Field Arrow")) {
+        if (ctx.device->view_magnetic_field_arrow) {
+            ctx.device->view_magnetic_field_arrow = (false);
+        } else {
+            ctx.device->view_magnetic_field_arrow = (true);
+        }
+    }
+    ImGui::PopStyleColor(3);
+
+    // -------------------------------------------------------------------------------
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.9f, 0.4f, .9f, 1.0f)); // button
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.8f, 0.3f, 1.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // text
+    if (ImGui::Button("Poynting Field Arrow")) {
+        if (ctx.device->view_poynting_field_arrow) {
+            ctx.device->view_poynting_field_arrow = (false);
+        } else {
+            ctx.device->view_poynting_field_arrow = (true);
+        }
+    }
+    ImGui::PopStyleColor(3);
+
+    // -------------------------------------------------------------------------------
+    make_sub_title("Arrow Scale");
+    ImGui::SliderFloat("##arrow_scale", &ctx.device->arrow_scale, 1.0f, 2000.0f, "%1.f");
+    // -------------------------------------------------------------------------------
+    make_sub_title("Arrow Tickness");
+    ImGui::SliderFloat("##arrow_tickness", &ctx.device->arrow_thickness, 1.0f, 10.0f, "%1.f");
+
+    // -------------------------------------------------------------------------------
+    make_sub_title("Arrow Interval");
+    if (ImGui::SliderInt("##arrow_interval", &ctx.device->arrow_interval, 40, 1000)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    // -------------------------------------------------------------------------------
+    make_sub_title("Min X Range");
+    if (ImGui::InputInt("##arrow_min_range_x", &ctx.device->arrow_min_range_x)) {
+        
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    make_sub_title("Max X Range");
+    if (ImGui::InputInt("##arrow_max_range_x", &ctx.device->arrow_max_range_x)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    make_sub_title("Min Y Range");
+    if (ImGui::InputInt("##arrow_min_range_y", &ctx.device->arrow_min_range_y)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    make_sub_title("Max Y Range");
+    if (ImGui::InputInt("##arrow_max_range_y", &ctx.device->arrow_max_range_y)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    make_sub_title("Min Z Range");
+    if (ImGui::InputInt("##arrow_min_range_z", &ctx.device->arrow_min_range_z)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    }
+    make_sub_title("Max Z Range");
+    if (ImGui::InputInt("##arrow_max_range_z", &ctx.device->arrow_max_range_z)) {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
+                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
+                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
+                                 ctx.device->arrow_max_range_z);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
     }
 
     ImGui::End();

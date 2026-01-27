@@ -10,6 +10,7 @@ namespace graphic   {class Device;}
 namespace imgui     {class Imgui_core;}
 namespace scene     {class Scene;}
 namespace input     {class Input;}
+namespace editor    {class Editor;}
 }
 
 // clang-format on
@@ -26,8 +27,9 @@ class Context
     imgui::Imgui_core*     imgui{nullptr};
     scene::Scene*          scene{nullptr};
     input::Input*          input{nullptr};
+    editor::Editor*        editor{nullptr};
 
-    float f_dt{0.0f};
-    double time{0.0f}; // 런타임 시간
+    float                  f_dt{0.0f};
+    double                 d_time{0.0f}; // 런타임 시간
 };
 } // namespace seop

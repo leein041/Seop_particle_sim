@@ -18,7 +18,7 @@ class Camera_trasform
     math::Vec3 up{0.0f, 1.0f, 0.0f};
     math::Vec3 right{1.0f, 0.0f, 0.0f};
 
-    float      speed_scale{500.0f};
+    float      speed_scale{6000.0f};
     float      yaw{0.0f};
     float      pitch{0.0f};
 };

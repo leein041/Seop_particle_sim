@@ -20,7 +20,7 @@ class Particle_change_command : public command::Command
 
     bool execute() override
     {
-        scene_.create_particles(cnt_);
+        scene_.create_particles_cube_group(cnt_);
         return true;
     }
 

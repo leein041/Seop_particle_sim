@@ -15,7 +15,6 @@ class Imgui_state
 {
   public:
     bool is_ui_hovered{false};
-    bool is_reset{false};
 };
 
 class Imgui_core

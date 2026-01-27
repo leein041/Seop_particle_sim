@@ -1,4 +1,6 @@
 #pragma once
+#include "seop_opengl/buffer.hpp"
+#include "seop_opengl/vertex_array.hpp"
 #include "seop_primitive/vertex.hpp"
 
 namespace seop::item
@@ -7,28 +9,57 @@ template <typename T>
 class Render_item
 {
   public:
-    Render_item() {};
+    Render_item() = default;
     ~Render_item() = default;
-    primitive::Vertex_buffer<T> vb;
-    primitive::Vertex_array<T>  va;
+
+    void                        create();
+    void                        bind(GLenum target, GLenum usage);
+    opengl::Gl_vertex_buffer<T> vb;
+    opengl::Gl_vertex_array     va;
 };
 
-//temp
-class Square_wire : public Render_item<primitive::Vertex_p>
+class Particle : public Render_item<primitive::Vertex_pcv>
 {
   public:
-    Square_wire();
-    ~Square_wire() = default;
-
-    float      line_width{1.0f};
-    math::Vec2 scale{1.0f, 1.0f};
+    Particle();
+    ~Particle() = default;
 };
-class Wire : public Render_item<primitive::Vertex_pcs>
+
+class Arrow_node : public Render_item<primitive::Vertex_pf>
 {
   public:
-    Wire();
-    ~Wire() = default;
-
-    float      line_width{1.0f};
+    Arrow_node();
+    ~Arrow_node() = default;
 };
+
+class Screen_quad : public Render_item<primitive::Vertex_pu>
+{
+  public:
+    Screen_quad();
+    ~Screen_quad() = default;
+};
+
+class Grid_quad : public Render_item<primitive::Vertex_pc>
+{
+  public:
+    Grid_quad();
+    ~Grid_quad() = default;
+};
+
+template <typename T>
+inline void Render_item<T>::create()
+{
+    vb.buf_.create();
+    va.create();
+}
+
+template <typename T>
+inline void Render_item<T>::bind(GLenum target, GLenum usage)
+{
+    va.bind();
+    vb.buf_.bind(target);
+    vb.buffer_data(target, usage);
+    T::specify_vertex_attribute();
+}
+
 } // namespace seop::item
