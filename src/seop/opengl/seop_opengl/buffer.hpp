@@ -12,10 +12,9 @@ namespace seop::opengl
 class Gl_buffer
 {
   public:
-    Gl_buffer() = default;
+    Gl_buffer();
     ~Gl_buffer();
 
-    void     create();
     void     bind(GLenum target);
     void     bind_base(GLenum target, uint32_t slot);
     uint32_t id_{0};
@@ -24,6 +23,8 @@ class Gl_buffer
 class Frame_buffer
 {
   public:
+  Frame_buffer();
+  ~Frame_buffer();
     void       create();
     void       bind(GLenum target);
     void       connect_tex(GLenum frame_target, GLenum slot, GLenum tex_target, uint32_t mipmap_level);

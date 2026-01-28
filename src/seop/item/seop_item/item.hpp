@@ -12,8 +12,7 @@ class Render_item
     Render_item() = default;
     ~Render_item() = default;
 
-    void                        create();
-    void                        bind(GLenum target, GLenum usage);
+    void                        specify_attribute(GLenum target, GLenum usage);
     opengl::Gl_vertex_buffer<T> vb;
     opengl::Gl_vertex_array     va;
 };
@@ -46,15 +45,9 @@ class Grid_quad : public Render_item<primitive::Vertex_pc>
     ~Grid_quad() = default;
 };
 
-template <typename T>
-inline void Render_item<T>::create()
-{
-    vb.buf_.create();
-    va.create();
-}
 
 template <typename T>
-inline void Render_item<T>::bind(GLenum target, GLenum usage)
+inline void Render_item<T>::specify_attribute(GLenum target, GLenum usage)
 {
     va.bind();
     vb.buf_.bind(target);

@@ -399,77 +399,42 @@ void Imgui_renderer::show_device_data(Context& ctx)
     ImGui::SliderFloat("##arrow_tickness", &ctx.device->arrow_thickness, 1.0f, 10.0f, "%1.f");
 
     // -------------------------------------------------------------------------------
+    auto update_arrows = [&]() {
+        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_range);
+        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
+                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
+                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    };
+
     make_sub_title("Arrow Interval");
     if (ImGui::SliderInt("##arrow_interval", &ctx.device->arrow_interval, 40, 1000)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+        update_arrows();
     }
     // -------------------------------------------------------------------------------
+    bool changed = false;
     make_sub_title("Min X Range");
-    if (ImGui::InputInt("##arrow_min_range_x", &ctx.device->arrow_min_range_x)) {
-        
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_min_range_x", &ctx.device->arrow_range[0])) {
+        update_arrows();
     }
     make_sub_title("Max X Range");
-    if (ImGui::InputInt("##arrow_max_range_x", &ctx.device->arrow_max_range_x)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_max_range_x", &ctx.device->arrow_range[1])) {
+        update_arrows();
     }
     make_sub_title("Min Y Range");
-    if (ImGui::InputInt("##arrow_min_range_y", &ctx.device->arrow_min_range_y)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_min_range_y", &ctx.device->arrow_range[2])) {
+        update_arrows();
     }
     make_sub_title("Max Y Range");
-    if (ImGui::InputInt("##arrow_max_range_y", &ctx.device->arrow_max_range_y)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_max_range_y", &ctx.device->arrow_range[3])) {
+        update_arrows();
     }
     make_sub_title("Min Z Range");
-    if (ImGui::InputInt("##arrow_min_range_z", &ctx.device->arrow_min_range_z)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_min_range_z", &ctx.device->arrow_range[4])) {
+        update_arrows();
     }
     make_sub_title("Max Z Range");
-    if (ImGui::InputInt("##arrow_max_range_z", &ctx.device->arrow_max_range_z)) {
-        ctx.device->create_arrow(ctx.device->arrow_interval, ctx.device->arrow_min_range_x,
-                                 ctx.device->arrow_max_range_x, ctx.device->arrow_min_range_y,
-                                 ctx.device->arrow_max_range_y, ctx.device->arrow_min_range_z,
-                                 ctx.device->arrow_max_range_z);
-        ctx.device->update_shader_buffer(ctx.device->arrow_nodes_.vb.buf_.id_, 2,
-                                         sizeof(primitive::Vertex_pf) * ctx.device->arrow_nodes_.vb.vertices.size(),
-                                         ctx.device->arrow_nodes_.vb.vertices.data());
+    if (ImGui::InputInt("##arrow_max_range_z", &ctx.device->arrow_range[5])) {
+        update_arrows();
     }
 
     ImGui::End();

@@ -12,11 +12,6 @@ Shader_program::~Shader_program()
 {
 }
 
-void Shader_program::create()
-{
-    program_.id_ = glCreateProgram();
-}
-
 void Shader_program::attach(opengl::Gl_shader&& shader)
 {
     glAttachShader(program_.id_, shader.id_);

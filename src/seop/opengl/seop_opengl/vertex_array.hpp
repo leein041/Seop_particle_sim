@@ -10,7 +10,6 @@ class Gl_vertex_array
     Gl_vertex_array();
     ~Gl_vertex_array();
 
-    void create();
     void bind();
     uint32_t id_{0};
 };

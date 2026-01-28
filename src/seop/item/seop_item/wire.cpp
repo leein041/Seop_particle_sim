@@ -4,11 +4,7 @@ namespace seop::item
 {
 Wire_node::Wire_node()
 {
+    vb.vertices.reserve(100);
 }
 
-void Wire_node::create()
-{
-    vb.vertices.reserve(100);
-    Render_item::create();
-}
 } // namespace seop::item

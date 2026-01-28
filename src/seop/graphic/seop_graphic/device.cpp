@@ -39,7 +39,6 @@ void Device::init(Context& ctx)
 #if _DEBUG
     std::cout << "Current Working Directory: " << std::filesystem::current_path() << std::endl;
 #endif
-    glewInit();
     glEnable(GL_POINT_SPRITE);       // 입자 텍스쳐 좌표
     glEnable(GL_PROGRAM_POINT_SIZE); // 셰이더에서 입자 크기 조절 가능
 
@@ -82,8 +81,7 @@ void Device::init_screen_qaud()
     screen_quad_.vb.vertices.push_back(Vertex_pu{Vec4{1.0f, -1.0f, 0.0f, 1.0f}, Vec4{1.0f, 0.0f, 0.0f, 0.0f}});
     screen_quad_.vb.vertices.push_back(Vertex_pu{Vec4{1.0f, 1.0f, 0.0f, 1.0f}, Vec4{1.0f, 1.0f, 0.0f, 0.0f}});
 
-    screen_quad_.create();
-    screen_quad_.bind(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    screen_quad_.specify_attribute(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 }
 
 /*------------------
@@ -99,15 +97,13 @@ void Device::init_grid()
     grid_quad_.vb.vertices.push_back(Vertex_pc{Vec4{1.0f, 0.0f, -1.0f, 1.0f}, Vec4{1.0f, 1.0f, 1.0f, 1.0f}});
     grid_quad_.vb.vertices.push_back(Vertex_pc{Vec4{-1.0f, 0.0f, -1.0f, 1.0f}, Vec4{1.0f, 1.0f, 1.0f, 1.0f}});
 
-    grid_quad_.create();
-    grid_quad_.bind(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    grid_quad_.specify_attribute(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 }
 
 void Device::init_particle(Context& ctx)
 {
     item::Particle& partiles = ctx.scene->data().entities.particles;
-    partiles.create();
-    partiles.bind(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    partiles.specify_attribute(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 }
 
 void Device::hot_load_shader(Context& ctx)
@@ -134,19 +130,19 @@ auto Device::on_message(msg::Message& msg) -> bool
 void Device::compute(Context& ctx)
 {
 
-    shader_programs_[to_idx(Shader_program_type::Compute_arrow_field)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Compute_arrow_field)].set_uniform(ctx);
 
-    shader_programs_[to_idx(Shader_program_type::Compute_arrow_field)].compute(
+    programs_[to_idx(Program_type::Compute_arrow_field)].compute(
         static_cast<uint32_t>((arrow_nodes_.vb.vertices.size() + 255) / 256), 1, 1);
 
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
     if (data_.compute_type & Compute_type::Time_varying_EM_field) {
-        shader_programs_[to_idx(Shader_program_type::Compute_static_magnetic_field)].set_uniform(ctx);
+        programs_[to_idx(Program_type::Compute_static_magnetic_field)].set_uniform(ctx);
     } else if (data_.compute_type & Compute_type::Lorenz_equation) {
-        shader_programs_[to_idx(Shader_program_type::Compute_lorenz_equation)].set_uniform(ctx);
+        programs_[to_idx(Program_type::Compute_lorenz_equation)].set_uniform(ctx);
     }
-    shader_programs_[to_idx(Shader_program_type::Compute_arrow_field)].compute(
+    programs_[to_idx(Program_type::Compute_arrow_field)].compute(
         static_cast<uint32_t>((ctx.scene->data().entities.particles.vb.vertices.size() + 255) / 256), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 }
@@ -191,7 +187,7 @@ void Device::prepare_arrow(Context& ctx)
     glDepthMask(GL_TRUE);    // 깊이 값을 기록함
     glDepthFunc(GL_LESS);    // 가까운 것이 보이게 설정
     glLineWidth(arrow_thickness);
-    shader_programs_[to_idx(Shader_program_type::Render_arrow)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Render_arrow)].set_uniform(ctx);
 }
 
 void Device::draw_arrow()
@@ -205,7 +201,7 @@ void Device::prepare_grid(Context& ctx)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    shader_programs_[to_idx(Shader_program_type::Render_grid)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Render_grid)].set_uniform(ctx);
 }
 
 void Device::draw_grid()
@@ -224,13 +220,13 @@ void Device::prepare_particle(Context& ctx)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     glPointSize(ctx.scene->data().particle_properties.size);
-    shader_programs_[to_idx(Shader_program_type::Render_particle)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Render_particle)].set_uniform(ctx);
 }
 
 void Device::prepare_wire(Context& ctx)
 {
     glLineWidth(ctx.scene->data().wire_properites.wire_nodes.line_width);
-    shader_programs_[to_idx(Shader_program_type::Render_wire)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Render_wire)].set_uniform(ctx);
 }
 
 void Device::draw_particle(Context& ctx)
@@ -260,7 +256,7 @@ void Device::prepare_screen_quad(Context& ctx, bool use_tex)
         frame_buffers_[to_idx(Frame_buffer_type::Particle_layer)].use_tex = false;
         glBindTexture(GL_TEXTURE_2D, 0);
     }
-    shader_programs_[to_idx(Shader_program_type::Render_screen_quad)].set_uniform(ctx);
+    programs_[to_idx(Program_type::Render_screen_quad)].set_uniform(ctx);
 }
 
 void Device::draw_screen_quad()
@@ -280,19 +276,22 @@ void Device::clear_frame()
 
 void Device::init_arrow()
 {
-    arrow_nodes_.create();
-    arrow_nodes_.bind(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    arrow_nodes_.specify_attribute(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    create_arrow(arrow_interval, arrow_range);
 }
 
-void Device::create_arrow(int interval, int x_min, int x_max, int y_min, int y_max, int z_min, int z_max)
+void Device::create_arrow(int interval, int* range)
 {
+    if (range[1] < range[0] || range[3] < range[2] || range[5] < range[4]) {
+        return;
+    }
     arrow_nodes_.vb.vertices.clear();
-    arrow_nodes_.vb.vertices.reserve((x_max / interval - x_min / interval + 1) *
-                                     (y_max / interval - y_min / interval + 1) *
-                                     (z_max / interval - z_min / interval + 1) * 6);
-    for (int x = x_min / interval; x <= x_max / interval; x++) {
-        for (int y = y_min / interval; y <= y_max / interval; y++) {
-            for (int z = z_min / interval; z <= z_max / interval; z++) {
+    arrow_nodes_.vb.vertices.reserve((range[1] / interval - range[0] / interval + 1) *
+                                     (range[3] / interval - range[2] / interval + 1) *
+                                     (range[5] / interval - range[4] / interval + 1) * 6);
+    for (int x = range[0] / interval; x <= range[1] / interval; x++) {
+        for (int y = range[2] / interval; y <= range[3] / interval; y++) {
+            for (int z = range[4] / interval; z <= range[5] / interval; z++) {
                 // 전기장
                 arrow_nodes_.vb.vertices.push_back(
                     Vertex_pf{Vec4{x * interval, y * interval, z * interval, 1}, Vec4::Zero});
@@ -313,21 +312,19 @@ void Device::create_arrow(int interval, int x_min, int x_max, int y_min, int y_m
     }
 }
 
-void Device::set_compute_task(Shader_program_type type, const std::string& cs_path,
-                              std::function<void(uint32_t, Context&)> uniform_setter)
+void Device::set_compute_program(Program_type type, const std::string& cs_path,
+                                 std::function<void(uint32_t, Context&)> uniform_setter)
 {
-    Shader_program& task = shader_programs_[to_idx(type)];
-    task.create();
+    Shader_program& task = programs_[to_idx(type)];
     task.attach(opengl::Gl_shader(cs_path, GL_COMPUTE_SHADER));
     task.link();
     task.set_uniform_setter(uniform_setter);
 }
 
-void Device::set_render_task(Shader_program_type type, const std::string& vs_path, const std::string& fs_path,
-                             std::function<void(uint32_t, Context&)> uniform_setter)
+void Device::set_render_program(Program_type type, const std::string& vs_path, const std::string& fs_path,
+                                std::function<void(uint32_t, Context&)> uniform_setter)
 {
-    Shader_program& task = shader_programs_[to_idx(type)];
-    task.create();
+    Shader_program& task = programs_[to_idx(type)];
     task.attach(opengl::Gl_shader(vs_path, GL_VERTEX_SHADER));
     task.attach(opengl::Gl_shader(fs_path, GL_FRAGMENT_SHADER));
     task.link();
@@ -337,8 +334,7 @@ void Device::set_render_task(Shader_program_type type, const std::string& vs_pat
 void Device::init_wire(Context& ctx)
 {
     item::Wire_node& nodes = ctx.scene->data().wire_properites.wire_nodes;
-    nodes.create();
-    nodes.bind(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    nodes.specify_attribute(GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 }
 
 void Device::set_frame_buffer(Frame_buffer_type type, int width, int height)
@@ -423,28 +419,28 @@ void Device::set_compute_type(Compute_type type)
 void Device::set_shader_task(Context& ctx)
 {
     std::string shader_path = "../../../src/seop/graphic/seop_graphic/shader";
-    set_compute_task(Shader_program_type::Compute_static_magnetic_field,
-                     shader_path + "/comp/static_magnetic_field.comp", // FIXED : too long..
-                     [this](uint32_t program_id, Context& ctx) {
-                         glUseProgram(program_id);
-                         set_uniform_scene_data(program_id, ctx);
-                     });
-    set_compute_task(Shader_program_type::Compute_lorenz_equation,
-                     shader_path + "/comp/lolernz_equation.comp", // FIXED : too long..
-                     [this](uint32_t program, Context& ctx) {
-                         glUseProgram(program);
-                         set_uniform_scene_data(program, ctx);
-                         set_uniform_time_data(program, ctx);
-                     });
-    set_compute_task(Shader_program_type::Compute_arrow_field,
-                     shader_path + "/comp/arrow_field.comp", // FIXED : too long..
-                     [this](uint32_t program, Context& ctx) {
-                         glUseProgram(program);
-                         set_uniform_scene_data(program, ctx);
-                         set_uniform_time_data(program, ctx);
-                         glUniform1ui(glGetUniformLocation(program, "u_arrow_count"),
-                                      (uint32_t)arrow_nodes_.vb.vertices.size() / 6);
-                     });
+    set_compute_program(Program_type::Compute_static_magnetic_field,
+                        shader_path + "/comp/static_magnetic_field.comp", // FIXED : too long..
+                        [this](uint32_t program_id, Context& ctx) {
+                            glUseProgram(program_id);
+                            set_uniform_scene_data(program_id, ctx);
+                        });
+    set_compute_program(Program_type::Compute_lorenz_equation,
+                        shader_path + "/comp/lolernz_equation.comp", // FIXED : too long..
+                        [this](uint32_t program, Context& ctx) {
+                            glUseProgram(program);
+                            set_uniform_scene_data(program, ctx);
+                            set_uniform_time_data(program, ctx);
+                        });
+    set_compute_program(Program_type::Compute_arrow_field,
+                        shader_path + "/comp/arrow_field.comp", // FIXED : too long..
+                        [this](uint32_t program, Context& ctx) {
+                            glUseProgram(program);
+                            set_uniform_scene_data(program, ctx);
+                            set_uniform_time_data(program, ctx);
+                            glUniform1ui(glGetUniformLocation(program, "u_arrow_count"),
+                                         (uint32_t)arrow_nodes_.vb.vertices.size() / 6);
+                        });
 
 #if 0
     add_compute_task(
@@ -474,48 +470,48 @@ void Device::set_shader_task(Context& ctx)
                      (uint32_t)ctx.scene->data().attractor_properties.attractor_count);
     });
 #endif
-    set_render_task(Shader_program_type::Render_screen_quad,
-                    shader_path + "/vert/screen_quad.vert", // FIXED : too long..
-                    shader_path + "/frag/screen_quad.frag", // FIXED : too long..
-                    [this](uint32_t program, Context& ctx) {
-                        glUseProgram(program);
-                        if (uint32_t tex = frame_buffers_[to_idx(Frame_buffer_type::Particle_layer)].use_tex) {
-                            glUniform1i(glGetUniformLocation(program, "use_texture"), 1);
-                            glActiveTexture(GL_TEXTURE0);
-                            glUniform1i(glGetUniformLocation(program, "u_screen_texture"), 0);
-                        } else {
-                            glUniform1i(glGetUniformLocation(program, "use_texture"), 0);
-                            glUniform4f(glGetUniformLocation(program, "u_color"), data_.back_col.x_, data_.back_col.y_,
-                                        data_.back_col.z_, data_.fade_scale);
-                        }
-                    });
-    set_render_task(Shader_program_type::Render_grid,
-                    shader_path + "/vert/grid.vert", // FIXED : too long..
-                    shader_path + "/frag/grid.frag", // FIXED : too long..
-                    [this](uint32_t program_id, Context& ctx) {
-                        glUseProgram(program_id);
-                        set_uniform_scene_data(program_id, ctx);
-                    });
+    set_render_program(Program_type::Render_screen_quad,
+                       shader_path + "/vert/screen_quad.vert", // FIXED : too long..
+                       shader_path + "/frag/screen_quad.frag", // FIXED : too long..
+                       [this](uint32_t program, Context& ctx) {
+                           glUseProgram(program);
+                           if (uint32_t tex = frame_buffers_[to_idx(Frame_buffer_type::Particle_layer)].use_tex) {
+                               glUniform1i(glGetUniformLocation(program, "use_texture"), 1);
+                               glActiveTexture(GL_TEXTURE0);
+                               glUniform1i(glGetUniformLocation(program, "u_screen_texture"), 0);
+                           } else {
+                               glUniform1i(glGetUniformLocation(program, "use_texture"), 0);
+                               glUniform4f(glGetUniformLocation(program, "u_color"), data_.back_col.x_,
+                                           data_.back_col.y_, data_.back_col.z_, data_.fade_scale);
+                           }
+                       });
+    set_render_program(Program_type::Render_grid,
+                       shader_path + "/vert/grid.vert", // FIXED : too long..
+                       shader_path + "/frag/grid.frag", // FIXED : too long..
+                       [this](uint32_t program_id, Context& ctx) {
+                           glUseProgram(program_id);
+                           set_uniform_scene_data(program_id, ctx);
+                       });
 
-    set_render_task(Shader_program_type::Render_particle,
-                    shader_path + "/vert/particle.vert", // FIXED : too long..
-                    shader_path + "/frag/particle.frag", // FIXED : too long..
-                    [this](uint32_t program_id, Context& ctx) {
-                        glUseProgram(program_id);
-                        set_uniform_scene_data(program_id, ctx);
-                    });
+    set_render_program(Program_type::Render_particle,
+                       shader_path + "/vert/particle.vert", // FIXED : too long..
+                       shader_path + "/frag/particle.frag", // FIXED : too long..
+                       [this](uint32_t program_id, Context& ctx) {
+                           glUseProgram(program_id);
+                           set_uniform_scene_data(program_id, ctx);
+                       });
 
-    set_render_task(Shader_program_type::Render_wire,
-                    shader_path + "/vert/wire.vert", // FIXED : too long..
-                    shader_path + "/frag/wire.frag", // FIXED : too long..
-                    [this](uint32_t program_id, Context& ctx) {
-                        glUseProgram(program_id);
-                        set_uniform_scene_data(program_id, ctx);
-                         set_uniform_time_data(program_id, ctx);
-                    });
+    set_render_program(Program_type::Render_wire,
+                       shader_path + "/vert/wire.vert", // FIXED : too long..
+                       shader_path + "/frag/wire.frag", // FIXED : too long..
+                       [this](uint32_t program_id, Context& ctx) {
+                           glUseProgram(program_id);
+                           set_uniform_scene_data(program_id, ctx);
+                           set_uniform_time_data(program_id, ctx);
+                       });
 
-    set_render_task(
-        Shader_program_type::Render_arrow,
+    set_render_program(
+        Program_type::Render_arrow,
         shader_path + "/vert/arrow.vert", // FIXED : too long..
         shader_path + "/frag/arrow.frag", // FIXED : too long..
         [this](uint32_t program_id, Context& ctx) {
@@ -539,7 +535,6 @@ void Device::set_uniform_scene_data(uint32_t program_id, Context& ctx)
                  (uint32_t)ctx.scene->data().wire_properites.wire_nodes.vb.vertices.size() / 2);
     glUniform1f(glGetUniformLocation(program_id, "u_w"), ctx.scene->data().wire_properites.w);
     glUniform1f(glGetUniformLocation(program_id, "u_max_i"), ctx.scene->data().wire_properites.max_i);
-    glUniform1f(glGetUniformLocation(program_id, "u_c"), ctx.scene->data().wire_properites.c);
     glUniform1f(glGetUniformLocation(program_id, "u_c"), ctx.scene->data().wire_properites.c);
 
     glUniform1ui(glGetUniformLocation(program_id, "u_particle_count"),

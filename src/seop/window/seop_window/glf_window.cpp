@@ -7,11 +7,11 @@ namespace seop::window
 {
 Glf_window::Glf_window()
 {
+    open_window();
 }
 
 void Glf_window::init()
 {
-    open_window();
     glfwSwapInterval(1); // 1 - on vsync
 }
 
@@ -117,6 +117,8 @@ auto Glf_window::open_window() -> bool
     }
 
     glfwMakeContextCurrent(window_);
+    // glew 컨텍스트 생성
+    glewInit();
     return true;
 }
 } // namespace seop::window

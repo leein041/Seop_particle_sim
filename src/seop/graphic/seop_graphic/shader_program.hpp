@@ -22,7 +22,6 @@ class Shader_program
     Shader_program();
     ~Shader_program();
 
-    void create();
     void attach(opengl::Gl_shader&& shader);
     void link();
     void compute(uint32_t work_x, uint32_t work_y, uint32_t work_z);

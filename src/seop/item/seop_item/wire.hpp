@@ -10,7 +10,6 @@ class Wire_node : public Render_item<primitive::Vertex_pcs>
     Wire_node();
     ~Wire_node() = default;
 
-    void  create();
     float line_width{1.0f};
 };
 } // namespace seop::item

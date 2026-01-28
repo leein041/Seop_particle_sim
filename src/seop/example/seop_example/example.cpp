@@ -22,7 +22,7 @@
 #include <vector>
 
 namespace example
-{
+{   
 using namespace seop;
 
 class Example
@@ -144,8 +144,8 @@ class Example
 
 void example_run()
 {
-    Example example{};
 
+    Example example{};
     example.run();
 }
 } // namespace example

@@ -9,17 +9,18 @@
 
 namespace seop::opengl
 {
+Gl_buffer::Gl_buffer()
+{
+    if (id_ == 0) {
+        glGenBuffers(1, &id_);
+    }
+}
 
 Gl_buffer::~Gl_buffer()
 {
     if (id_ != 0) {
         glDeleteBuffers(1, &id_);
     }
-}
-
-void Gl_buffer::create()
-{
-    glGenBuffers(1, &id_);
 }
 
 void Gl_buffer::bind(GLenum target)
@@ -32,9 +33,22 @@ void Gl_buffer::bind_base(GLenum target, uint32_t slot)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slot, id_);
 }
 
+Frame_buffer::Frame_buffer()
+{
+}
+
+Frame_buffer::~Frame_buffer()
+{
+    if (id_ != 0) {
+        glDeleteBuffers(1, &id_);
+    }
+}
+
 void Frame_buffer::create()
 {
-    glGenFramebuffers(1, &id_);
+    if (id_ == 0) {
+        glGenFramebuffers(1, &id_);
+    }
 }
 
 void Frame_buffer::bind(GLenum target)

@@ -11,8 +11,6 @@ Camera::Camera()
 
 void Camera::init()
 {
-    make_view();
-    make_projection();
 }
 
 void Camera::update()

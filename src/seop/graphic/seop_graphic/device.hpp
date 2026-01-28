@@ -57,7 +57,7 @@ class Device_data
     Compute_type compute_type{Compute_type::Time_varying_EM_field};
 };
 
-enum class Shader_program_type {
+enum class Program_type {
 
     Compute_arrow_field,
     Compute_static_magnetic_field,
@@ -76,7 +76,7 @@ enum class Frame_buffer_type {
     End,
 };
 constexpr size_t FRAME_BUFFER_MAX = static_cast<size_t>(Frame_buffer_type::End);
-constexpr size_t SHADER_TASK_MAX = static_cast<size_t>(Shader_program_type::End);
+constexpr size_t SHADER_TASK_MAX = static_cast<size_t>(Program_type::End);
 
 class Device final
 {
@@ -113,18 +113,13 @@ class Device final
     bool             view_electric_field_arrow{false};
     bool             view_magnetic_field_arrow{false};
     bool             view_poynting_field_arrow{false};
-    int              arrow_min_range_x{-1000};
-    int              arrow_max_range_x{1000};
-    int              arrow_min_range_y{-1000};
-    int              arrow_max_range_y{1000};
-    int              arrow_min_range_z{-1000};
-    int              arrow_max_range_z{1000};
+    int              arrow_range[6]{-1000, 1000, -1000, 1000, -1000, 1000}; // -x x -y y -z z
     int              arrow_interval{200};
     float            arrow_scale{1.0f};
     float            arrow_thickness{1.0f};
     item::Arrow_node arrow_nodes_;
     void             init_arrow();
-    void             create_arrow(int interval, int x_min, int x_max, int y_min, int y_max, int z_min, int z_max);
+    void             create_arrow(int interval, int* range);
 
     void             prepare_arrow(Context& ctx);
     void             draw_arrow();
@@ -142,10 +137,10 @@ class Device final
     void draw_particle(Context& ctx);
     void draw_wire(Context& ctx);
 
-    void set_compute_task(Shader_program_type type, const std::string& cs_path,
-                          std::function<void(uint32_t, Context&)> uniform_setter);
-    void set_render_task(Shader_program_type type, const std::string& vs_path, const std::string& fs_path,
-                         std::function<void(uint32_t, Context&)> uniform_setter);
+    void set_compute_program(Program_type type, const std::string& cs_path,
+                             std::function<void(uint32_t, Context&)> uniform_setter);
+    void set_render_program(Program_type type, const std::string& vs_path, const std::string& fs_path,
+                            std::function<void(uint32_t, Context&)> uniform_setter);
     void set_frame_buffer(Frame_buffer_type type, int width, int height);
 
     void init_screen_qaud();
@@ -157,7 +152,7 @@ class Device final
 
   private:
     Device_data                                        data_;
-    std::array<Shader_program, SHADER_TASK_MAX>        shader_programs_;
+    std::array<Shader_program, SHADER_TASK_MAX>        programs_;
     std::array<opengl::Frame_buffer, FRAME_BUFFER_MAX> frame_buffers_;
     item::Screen_quad                                  screen_quad_;
     item::Grid_quad                                    grid_quad_;
